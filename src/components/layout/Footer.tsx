@@ -1,13 +1,10 @@
-
 import { Link } from "react-router-dom";
-
 const Footer = () => {
-  return (
-    <footer className="bg-gray-50 border-t border-gray-200 pt-12 pb-8">
+  return <footer className="bg-gray-50 border-t border-gray-200 pt-12 pb-8">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
-            <img src="/logo.png" alt="Blog Company" className="h-8 mb-4" />
+            <img alt="Blog Company" className="h-8 mb-4" src="/lovable-uploads/bf78f7dd-08d3-45fb-9948-7d860cb56b78.png" />
             <p className="text-gray-600 text-sm mb-4">
               A platform dedicated to quality content and insightful stories.
             </p>
@@ -64,8 +61,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
