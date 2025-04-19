@@ -8,9 +8,12 @@ import { useToast } from '@/components/ui/use-toast';
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  signUp: (email: string, password: string) => Promise<void>;
+  profile: any; // We'll create a more specific type later
+  signUp: (email: string, password: string, metadata?: object) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  updateProfile: (updates: object) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,41 +21,72 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<any>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
     // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          // Fetch user profile
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+
+          if (profileData) {
+            setProfile(profileData);
+          }
+        } else {
+          setProfile(null);
+        }
       }
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+
+      if (session?.user) {
+        // Fetch user profile
+        const { data: profileData, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profileData) {
+          setProfile(profileData);
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, metadata?: object) => {
     try {
       const { error } = await supabase.auth.signUp({
         email,
         password,
+        options: { data: metadata }
       });
       
       if (error) throw error;
       
       toast({
-        title: "Check your email",
-        description: "We've sent you a confirmation link to complete your registration.",
+        title: "Account Created",
+        description: "Check your email for a confirmation link.",
       });
       
+      navigate('/');
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -72,17 +106,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) throw error;
       
-      navigate('/');
-      
       toast({
         title: "Welcome back!",
         description: "You have successfully signed in.",
       });
       
+      navigate('/');
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Error signing in",
+        description: error.message,
+      });
+      throw error;
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error signing in with Google",
         description: error.message,
       });
       throw error;
@@ -94,13 +147,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      navigate('/signin');
-      
       toast({
         title: "Signed out",
         description: "You have been successfully signed out.",
       });
       
+      navigate('/signin');
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -111,8 +163,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const updateProfile = async (updates: object) => {
+    if (!user) {
+      throw new Error('No authenticated user');
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Fetch updated profile
+      const { data: updatedProfile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      setProfile(updatedProfile);
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error updating profile",
+        description: error.message,
+      });
+      throw error;
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ session, user, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ 
+      session, 
+      user, 
+      profile, 
+      signUp, 
+      signIn, 
+      signInWithGoogle, 
+      signOut,
+      updateProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   );

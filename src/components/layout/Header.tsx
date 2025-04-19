@@ -11,7 +11,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   
   return (
     <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
@@ -47,13 +47,23 @@ const Header = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
                     <div className="bg-brand-orange text-white rounded-full w-8 h-8 flex items-center justify-center">
-                      <User size={18} />
+                      {profile?.avatar_url ? (
+                        <img 
+                          src={profile.avatar_url} 
+                          alt={profile.full_name || 'User Avatar'} 
+                          className="w-full h-full rounded-full object-cover"
+                        />
+                      ) : (
+                        <User size={18} />
+                      )}
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-52">
                   <DropdownMenuItem asChild>
-                    <Link to="/profile" className="w-full cursor-pointer">Profile</Link>
+                    <Link to="/profile" className="w-full cursor-pointer">
+                      {profile?.full_name || user.email}
+                    </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link to="/my-stories" className="w-full cursor-pointer">My Stories</Link>

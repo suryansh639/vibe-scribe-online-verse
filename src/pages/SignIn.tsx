@@ -1,11 +1,12 @@
 
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, EyeOff } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SignIn = () => {
   const [email, setEmail] = useState("");
@@ -15,7 +16,7 @@ const SignIn = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   
-  const navigate = useNavigate();
+  const { signIn, signInWithGoogle } = useAuth();
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,17 +31,20 @@ const SignIn = () => {
     setIsLoading(true);
     
     try {
-      // This would be replaced with actual auth logic when connected to backend
-      console.log("Sign in:", { email, password, rememberMe });
-      
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirect to home page after successful login
-      navigate("/");
-    } catch (err) {
-      setError("Invalid email or password");
-      console.error(err);
+      await signIn(email, password);
+    } catch (err: any) {
+      setError(err.message || "An error occurred during sign in");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsLoading(true);
+    try {
+      await signInWithGoogle();
+    } catch (err: any) {
+      setError(err.message || "An error occurred during Google sign in");
     } finally {
       setIsLoading(false);
     }
@@ -143,7 +147,13 @@ const SignIn = () => {
             </div>
             
             <div className="mt-6 grid grid-cols-2 gap-3">
-              <Button variant="outline" type="button" className="w-full">
+              <Button 
+                variant="outline" 
+                type="button" 
+                className="w-full"
+                onClick={handleGoogleSignIn}
+                disabled={isLoading}
+              >
                 Google
               </Button>
               <Button variant="outline" type="button" className="w-full">
