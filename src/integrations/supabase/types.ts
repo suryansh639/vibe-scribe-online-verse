@@ -48,6 +48,7 @@ export type Database = {
       articles: {
         Row: {
           author_id: string
+          bookmarks_count: number | null
           comments: number | null
           content: string | null
           cover_image: string | null
@@ -59,12 +60,14 @@ export type Database = {
           published: boolean | null
           published_at: string | null
           read_time: string | null
+          status: string | null
           tags: string[] | null
           title: string
           updated_at: string
         }
         Insert: {
           author_id: string
+          bookmarks_count?: number | null
           comments?: number | null
           content?: string | null
           cover_image?: string | null
@@ -76,12 +79,14 @@ export type Database = {
           published?: boolean | null
           published_at?: string | null
           read_time?: string | null
+          status?: string | null
           tags?: string[] | null
           title: string
           updated_at?: string
         }
         Update: {
           author_id?: string
+          bookmarks_count?: number | null
           comments?: number | null
           content?: string | null
           cover_image?: string | null
@@ -93,6 +98,7 @@ export type Database = {
           published?: boolean | null
           published_at?: string | null
           read_time?: string | null
+          status?: string | null
           tags?: string[] | null
           title?: string
           updated_at?: string
@@ -103,6 +109,35 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bookmarks: {
+        Row: {
+          article_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          article_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          article_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "articles"
             referencedColumns: ["id"]
           },
         ]
@@ -193,6 +228,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          is_admin: boolean | null
           updated_at: string
           username: string | null
           website: string | null
@@ -204,6 +240,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          is_admin?: boolean | null
           updated_at?: string
           username?: string | null
           website?: string | null
@@ -215,6 +252,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
           updated_at?: string
           username?: string | null
           website?: string | null

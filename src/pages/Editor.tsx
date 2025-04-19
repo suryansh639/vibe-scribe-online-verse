@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -7,6 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Image, X, PlusCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Editor = () => {
   const [title, setTitle] = useState("");
@@ -17,6 +18,7 @@ const Editor = () => {
   const [isPublishing, setIsPublishing] = useState(false);
   
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -54,14 +56,23 @@ const Editor = () => {
     setIsPublishing(true);
     
     try {
-      // This would be replaced with actual API logic when connected to backend
-      console.log("Publishing article:", { title, content, coverImage, tags });
+      const { data: article, error } = await supabase
+        .from('articles')
+        .insert({
+          title,
+          content,
+          cover_image: coverImage,
+          tags,
+          author_id: user?.id,
+          status: 'pending', // Set status to pending for admin approval
+          excerpt: content.substring(0, 200) + '...'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Redirect to the published article (for now, just go home)
-      navigate("/");
+      navigate(`/dashboard`);
     } catch (err) {
       console.error(err);
     } finally {

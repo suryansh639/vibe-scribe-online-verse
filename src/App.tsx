@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Editor from "./pages/Editor";
+import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -31,7 +32,8 @@ const App = () => (
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
             
-            {/* Protected routes - would normally check auth */}
+            {/* Protected routes */}
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/new-story" element={<Editor />} />
             <Route path="/admin" element={<AdminDashboard />} />
             
