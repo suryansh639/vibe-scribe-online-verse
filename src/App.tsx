@@ -1,8 +1,10 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import ArticleDetail from "./pages/ArticleDetail";
 import Profile from "./pages/Profile";
@@ -17,28 +19,30 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
       <BrowserRouter>
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Index />} />
-          <Route path="/article/:id" element={<ArticleDetail />} />
-          <Route path="/profile/:id" element={<Profile />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
-          
-          {/* Protected routes - would normally check auth */}
-          <Route path="/new-story" element={<Editor />} />
-          <Route path="/admin" element={<AdminDashboard />} />
-          
-          {/* Redirects */}
-          <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
-          <Route path="/write" element={<Navigate to="/new-story" replace />} />
-          
-          {/* 404 route */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Index />} />
+            <Route path="/article/:id" element={<ArticleDetail />} />
+            <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/signin" element={<SignIn />} />
+            <Route path="/signup" element={<SignUp />} />
+            
+            {/* Protected routes - would normally check auth */}
+            <Route path="/new-story" element={<Editor />} />
+            <Route path="/admin" element={<AdminDashboard />} />
+            
+            {/* Redirects */}
+            <Route path="/admin-dashboard" element={<Navigate to="/admin" replace />} />
+            <Route path="/write" element={<Navigate to="/new-story" replace />} />
+            
+            {/* 404 route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
