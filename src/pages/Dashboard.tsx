@@ -10,6 +10,7 @@ import { Alert } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { PenSquare, Bookmark, Heart } from "lucide-react";
 import ArticleCard from "@/components/articles/ArticleCard";
+import { useToast } from "@/components/ui/use-toast";
 import type { Database } from "@/integrations/supabase/types";
 
 type Article = Database["public"]["Tables"]["articles"]["Row"];
@@ -17,21 +18,27 @@ type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [myArticles, setMyArticles] = useState<Article[]>([]);
-  const [bookmarkedArticles, setBookmarkedArticles] = useState<Article[]>([]);
-  const [likedArticles, setLikedArticles] = useState<Article[]>([]);
+  const [myArticles, setMyArticles] = useState<any[]>([]);
+  const [bookmarkedArticles, setBookmarkedArticles] = useState<any[]>([]);
+  const [likedArticles, setLikedArticles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
       
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
+      
+      if (error) {
+        console.error("Error fetching profile:", error);
+        return;
+      }
       
       setProfile(profile);
     };
@@ -39,35 +46,122 @@ const Dashboard = () => {
     const fetchMyArticles = async () => {
       if (!user) return;
       
-      const { data: articles } = await supabase
+      const { data: articles, error } = await supabase
         .from('articles')
-        .select('*, author:profiles(*)')
+        .select(`
+          *,
+          author:profiles(*)
+        `)
         .eq('author_id', user.id)
         .order('created_at', { ascending: false });
       
-      setMyArticles(articles || []);
+      if (error) {
+        console.error("Error fetching articles:", error);
+        return;
+      }
+      
+      const formattedArticles = articles.map(article => ({
+        id: article.id,
+        title: article.title,
+        excerpt: article.excerpt || "",
+        coverImage: article.cover_image,
+        author: {
+          id: article.author.id,
+          name: article.author.full_name || article.author.username || "Anonymous",
+          avatar: article.author.avatar_url
+        },
+        publishedAt: article.published_at || article.created_at,
+        readTime: article.read_time || "5 min read",
+        tags: article.tags || [],
+        likes: article.likes || 0,
+        comments: article.comments || 0
+      }));
+      
+      setMyArticles(formattedArticles);
     };
 
     const fetchBookmarkedArticles = async () => {
       if (!user) return;
       
-      const { data: bookmarks } = await supabase
+      const { data: bookmarks, error } = await supabase
         .from('bookmarks')
-        .select('article:articles(*)')
+        .select(`
+          article_id,
+          articles!inner(
+            *,
+            profiles(*)
+          )
+        `)
         .eq('user_id', user.id);
       
-      setBookmarkedArticles(bookmarks?.map(b => b.article) || []);
+      if (error) {
+        console.error("Error fetching bookmarks:", error);
+        return;
+      }
+      
+      const formattedArticles = bookmarks.map(bookmark => {
+        const article = bookmark.articles;
+        return {
+          id: article.id,
+          title: article.title,
+          excerpt: article.excerpt || "",
+          coverImage: article.cover_image,
+          author: {
+            id: article.profiles.id,
+            name: article.profiles.full_name || article.profiles.username || "Anonymous",
+            avatar: article.profiles.avatar_url
+          },
+          publishedAt: article.published_at || article.created_at,
+          readTime: article.read_time || "5 min read",
+          tags: article.tags || [],
+          likes: article.likes || 0,
+          comments: article.comments || 0
+        };
+      });
+      
+      setBookmarkedArticles(formattedArticles);
     };
 
     const fetchLikedArticles = async () => {
       if (!user) return;
       
-      const { data: likes } = await supabase
+      const { data: likes, error } = await supabase
         .from('article_likes')
-        .select('article:articles(*)')
+        .select(`
+          article_id,
+          articles!inner(
+            *,
+            profiles(*)
+          )
+        `)
         .eq('user_id', user.id);
       
-      setLikedArticles(likes?.map(l => l.article) || []);
+      if (error) {
+        console.error("Error fetching likes:", error);
+        return;
+      }
+      
+      const formattedArticles = likes.map(like => {
+        const article = like.articles;
+        return {
+          id: article.id,
+          title: article.title,
+          excerpt: article.excerpt || "",
+          coverImage: article.cover_image,
+          author: {
+            id: article.profiles.id,
+            name: article.profiles.full_name || article.profiles.username || "Anonymous",
+            avatar: article.profiles.avatar_url
+          },
+          publishedAt: article.published_at || article.created_at,
+          readTime: article.read_time || "5 min read",
+          tags: article.tags || [],
+          likes: article.likes || 0,
+          comments: article.comments || 0
+        };
+      });
+      
+      setLikedArticles(formattedArticles);
     };
 
     Promise.all([
@@ -105,7 +199,7 @@ const Dashboard = () => {
               </div>
               
               <div className="space-y-3">
-                <Link to="/settings">
+                <Link to="/edit-profile">
                   <Button variant="outline" className="w-full">Edit Profile</Button>
                 </Link>
                 <Link to="/new-story">

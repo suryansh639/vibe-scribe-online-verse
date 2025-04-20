@@ -12,6 +12,8 @@ import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Editor from "./pages/Editor";
 import Dashboard from "./pages/Dashboard";
+import EditProfile from "./pages/EditProfile";
+import AllArticles from "./pages/AllArticles";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -31,9 +33,11 @@ const App = () => (
             <Route path="/profile/:id" element={<Profile />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/all-articles" element={<AllArticles />} />
             
             {/* Protected routes */}
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/edit-profile" element={<EditProfile />} />
             <Route path="/new-story" element={<Editor />} />
             <Route path="/admin" element={<AdminDashboard />} />
             

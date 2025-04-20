@@ -1,38 +1,185 @@
 
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import Layout from "@/components/layout/Layout";
-import { articles, comments, users, popularTags } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageSquare, Bookmark, Share2, ThumbsUp } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Link } from "react-router-dom";
-import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useArticleInteractions } from "@/hooks/useArticleInteractions";
+import CommentForm from "@/components/comments/CommentForm";
+import CommentsList from "@/components/comments/CommentsList";
 import ArticleCard from "@/components/articles/ArticleCard";
 
 const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
-  const [commentText, setCommentText] = useState("");
+  const [article, setArticle] = useState<any>(null);
+  const [relatedArticles, setRelatedArticles] = useState<any[]>([]);
+  const [popularTags, setPopularTags] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [commentsRefreshTrigger, setCommentsRefreshTrigger] = useState(0);
   
-  // Find the current article
-  const article = articles.find(article => article.id === id);
+  // Use the article interactions hook
+  const { 
+    isLiked, 
+    isBookmarked, 
+    likesCount, 
+    loading: interactionLoading, 
+    toggleLike, 
+    toggleBookmark 
+  } = useArticleInteractions({ articleId: id || "" });
   
-  // Get article comments
-  const articleComments = comments.filter(comment => comment.articleId === id);
+  useEffect(() => {
+    const fetchArticle = async () => {
+      if (!id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from("articles")
+          .select(`
+            *,
+            author:profiles(*)
+          `)
+          .eq("id", id)
+          .single();
+          
+        if (error) throw error;
+        
+        setArticle({
+          ...data,
+          author: {
+            id: data.author.id,
+            name: data.author.full_name || data.author.username || "Anonymous",
+            avatar: data.author.avatar_url,
+            bio: data.author.bio
+          }
+        });
+        
+        // Fetch related articles based on tags
+        if (data.tags && data.tags.length > 0) {
+          const { data: relatedData, error: relatedError } = await supabase
+            .from("articles")
+            .select(`
+              *,
+              profiles(*)
+            `)
+            .neq("id", id)
+            .eq("status", "published")
+            .overlaps("tags", data.tags)
+            .limit(3);
+            
+          if (!relatedError && relatedData) {
+            const formattedRelatedArticles = relatedData.map(article => ({
+              id: article.id,
+              title: article.title,
+              excerpt: article.excerpt || "",
+              coverImage: article.cover_image,
+              author: {
+                id: article.profiles.id,
+                name: article.profiles.full_name || article.profiles.username || "Anonymous",
+                avatar: article.profiles.avatar_url
+              },
+              publishedAt: article.published_at || article.created_at,
+              readTime: article.read_time || "5 min read",
+              tags: article.tags || [],
+              likes: article.likes || 0,
+              comments: article.comments || 0
+            }));
+            
+            setRelatedArticles(formattedRelatedArticles);
+          }
+        }
+        
+        // Fetch popular tags
+        const { data: tagsData } = await supabase
+          .from("articles")
+          .select("tags")
+          .eq("status", "published");
+          
+        if (tagsData) {
+          const tagCounts: Record<string, number> = {};
+          
+          tagsData.forEach(article => {
+            if (!article.tags) return;
+            
+            article.tags.forEach((tag: string) => {
+              tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+            });
+          });
+          
+          const sortedTags = Object.entries(tagCounts)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 12)
+            .map(([tag]) => tag);
+            
+          setPopularTags(sortedTags);
+        }
+      } catch (error) {
+        console.error("Error fetching article:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchArticle();
+  }, [id]);
   
-  // Get related articles (excluding current one)
-  const relatedArticles = articles
-    .filter(a => a.id !== id && a.tags.some(tag => article?.tags.includes(tag)))
-    .slice(0, 3);
+  const handleCommentAdded = () => {
+    // Trigger comments refresh
+    setCommentsRefreshTrigger(prev => prev + 1);
+  };
+  
+  if (loading) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Article content skeleton */}
+            <div className="lg:col-span-2 space-y-6">
+              <Skeleton className="h-10 w-2/3" />
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-full" />
+                <div className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+              <Skeleton className="h-64 w-full rounded-lg" />
+              <div className="space-y-4">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </div>
+            
+            {/* Sidebar skeleton */}
+            <div className="lg:col-span-1 space-y-6">
+              <div className="space-y-4">
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-32 w-full rounded-lg" />
+                <Skeleton className="h-32 w-full rounded-lg" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
   
   if (!article) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-3xl font-bold mb-4">Article Not Found</h1>
-          <p className="mb-8">The article you're looking for doesn't exist or has been removed.</p>
-          <Link to="/">
+          <Alert className="max-w-lg mx-auto">
+            <AlertTitle>Article Not Found</AlertTitle>
+            <AlertDescription>
+              The article you're looking for doesn't exist or has been removed.
+            </AlertDescription>
+          </Alert>
+          <Link to="/" className="mt-8 inline-block">
             <Button>Return to Home</Button>
           </Link>
         </div>
@@ -41,7 +188,7 @@ const ArticleDetail = () => {
   }
   
   // Format the date for display
-  const formattedDate = new Date(article.publishedAt).toLocaleDateString("en-US", {
+  const formattedDate = new Date(article.published_at || article.created_at).toLocaleDateString("en-US", {
     month: "long",
     day: "numeric",
     year: "numeric"
@@ -71,16 +218,16 @@ const ArticleDetail = () => {
                     {article.author.name}
                   </Link>
                   <div className="text-gray-500 text-sm">
-                    {formattedDate} · {article.readTime}
+                    {formattedDate} · {article.read_time || "5 min read"}
                   </div>
                 </div>
               </div>
               
               {/* Cover image */}
-              {article.coverImage && (
+              {article.cover_image && (
                 <div className="mb-8">
                   <img
-                    src={article.coverImage}
+                    src={article.cover_image}
                     alt={article.title}
                     className="w-full h-auto rounded-lg object-cover"
                   />
@@ -99,10 +246,10 @@ const ArticleDetail = () => {
             
             {/* Tags */}
             <div className="flex flex-wrap gap-2 mb-8">
-              {article.tags.map(tag => (
+              {article.tags?.map((tag: string) => (
                 <Link
                   key={tag}
-                  to={`/tag/${tag}`}
+                  to={`/all-articles?tag=${tag}`}
                   className="text-sm px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded-full text-gray-700"
                 >
                   {tag}
@@ -113,21 +260,32 @@ const ArticleDetail = () => {
             {/* Article actions */}
             <div className="flex items-center justify-between mb-10 py-4 border-t border-b border-gray-200">
               <div className="flex items-center gap-6">
-                <Button variant="ghost" className="flex items-center gap-2">
-                  <Heart size={20} className="text-gray-600" />
-                  <span>{article.likes}</span>
+                <Button 
+                  variant="ghost" 
+                  className={`flex items-center gap-2 ${isLiked ? 'text-red-500' : 'text-gray-600'}`}
+                  onClick={toggleLike}
+                  disabled={interactionLoading === "like"}
+                >
+                  <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
+                  <span>{likesCount || article.likes || 0}</span>
                 </Button>
-                <Button variant="ghost" className="flex items-center gap-2">
-                  <MessageSquare size={20} className="text-gray-600" />
-                  <span>{article.comments}</span>
+                <Button variant="ghost" className="flex items-center gap-2 text-gray-600">
+                  <MessageSquare size={20} />
+                  <span>{article.comments || 0}</span>
                 </Button>
               </div>
               <div className="flex items-center gap-4">
-                <Button variant="ghost" size="icon">
-                  <Bookmark size={20} className="text-gray-600" />
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  className={isBookmarked ? 'text-brand-orange' : 'text-gray-600'}
+                  onClick={toggleBookmark}
+                  disabled={interactionLoading === "bookmark"}
+                >
+                  <Bookmark size={20} fill={isBookmarked ? "currentColor" : "none"} />
                 </Button>
-                <Button variant="ghost" size="icon">
-                  <Share2 size={20} className="text-gray-600" />
+                <Button variant="ghost" size="icon" className="text-gray-600">
+                  <Share2 size={20} />
                 </Button>
               </div>
             </div>
@@ -149,9 +307,8 @@ const ArticleDetail = () => {
                     </Link>
                   </h3>
                   
-                  {/* Get author bio from users data */}
                   <p className="text-gray-600 mb-3">
-                    {users.find(user => user.id === article.author.id)?.bio || "Writer at Blog Company"}
+                    {article.author.bio || "Writer at Blog Company"}
                   </p>
                   
                   <Button className="bg-brand-orange hover:bg-brand-orangeDark text-white">
@@ -163,64 +320,19 @@ const ArticleDetail = () => {
             
             {/* Comments section */}
             <section>
-              <h3 className="text-xl font-bold mb-6">Comments ({articleComments.length})</h3>
+              <h3 className="text-xl font-bold mb-6">Comments ({article.comments || 0})</h3>
               
               {/* Comment form */}
-              <div className="mb-8">
-                <Textarea
-                  placeholder="Add a comment..."
-                  className="mb-3 min-h-[100px]"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                />
-                <Button 
-                  className="bg-brand-orange hover:bg-brand-orangeDark text-white"
-                  disabled={!commentText.trim()}
-                >
-                  Post Comment
-                </Button>
-              </div>
+              <CommentForm 
+                articleId={article.id}
+                onCommentAdded={handleCommentAdded}
+              />
               
               {/* Comment list */}
-              <div className="space-y-6">
-                {articleComments.map(comment => (
-                  <div key={comment.id} className="border-b border-gray-100 pb-6">
-                    <div className="flex items-start gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
-                        <AvatarFallback className="bg-brand-orange text-white">
-                          {comment.author.name.charAt(0)}
-                        </AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <div>
-                            <Link to={`/profile/${comment.author.id}`} className="font-medium hover:text-brand-orange">
-                              {comment.author.name}
-                            </Link>
-                            <span className="text-gray-500 text-sm ml-2">
-                              {new Date(comment.publishedAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <p className="text-gray-800 mb-2">{comment.content}</p>
-                        
-                        <div className="flex items-center gap-4">
-                          <Button variant="ghost" size="sm" className="text-gray-500 h-auto p-1">
-                            <ThumbsUp size={16} className="mr-1" />
-                            <span className="text-xs">{comment.likes}</span>
-                          </Button>
-                          <Button variant="ghost" size="sm" className="text-gray-500 h-auto p-1">
-                            Reply
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <CommentsList 
+                articleId={article.id} 
+                refreshTrigger={commentsRefreshTrigger} 
+              />
             </section>
           </div>
           
@@ -230,40 +342,44 @@ const ArticleDetail = () => {
             <div className="mb-8">
               <h3 className="font-bold text-lg mb-4">Related Articles</h3>
               <div className="space-y-6">
-                {relatedArticles.map(article => (
-                  <div key={article.id} className="border-b border-gray-100 pb-6">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200">
-                        {article.author.avatar ? (
-                          <img src={article.author.avatar} alt={article.author.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-brand-orange text-white text-xs">
-                            {article.author.name.charAt(0)}
-                          </div>
-                        )}
+                {relatedArticles.length > 0 ? (
+                  relatedArticles.map(article => (
+                    <div key={article.id} className="border-b border-gray-100 pb-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-6 h-6 rounded-full overflow-hidden bg-gray-200">
+                          {article.author.avatar ? (
+                            <img src={article.author.avatar} alt={article.author.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-brand-orange text-white text-xs">
+                              {article.author.name.charAt(0)}
+                            </div>
+                          )}
+                        </div>
+                        <Link to={`/profile/${article.author.id}`} className="text-sm font-medium hover:text-brand-orange">
+                          {article.author.name}
+                        </Link>
                       </div>
-                      <Link to={`/profile/${article.author.id}`} className="text-sm font-medium hover:text-brand-orange">
-                        {article.author.name}
-                      </Link>
-                    </div>
-                    
-                    <Link to={`/article/${article.id}`}>
-                      <h4 className="font-bold mb-2 hover:text-brand-orange transition-colors">
-                        {article.title}
-                      </h4>
-                    </Link>
-                    
-                    {article.coverImage && (
+                      
                       <Link to={`/article/${article.id}`}>
-                        <img
-                          src={article.coverImage}
-                          alt={article.title}
-                          className="w-full h-40 object-cover rounded mb-2"
-                        />
+                        <h4 className="font-bold mb-2 hover:text-brand-orange transition-colors">
+                          {article.title}
+                        </h4>
                       </Link>
-                    )}
-                  </div>
-                ))}
+                      
+                      {article.coverImage && (
+                        <Link to={`/article/${article.id}`}>
+                          <img
+                            src={article.coverImage}
+                            alt={article.title}
+                            className="w-full h-40 object-cover rounded mb-2"
+                          />
+                        </Link>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No related articles found</p>
+                )}
               </div>
             </div>
             
@@ -271,10 +387,10 @@ const ArticleDetail = () => {
             <div className="bg-gray-50 rounded-lg p-6 mb-8">
               <h3 className="font-bold text-lg mb-4">Popular Topics</h3>
               <div className="flex flex-wrap gap-2">
-                {popularTags.slice(0, 12).map(tag => (
+                {popularTags.map(tag => (
                   <Link
                     key={tag}
-                    to={`/tag/${tag}`}
+                    to={`/all-articles?tag=${tag}`}
                     className="text-sm px-3 py-1 bg-white border border-gray-200 hover:bg-gray-100 rounded-full text-gray-700"
                   >
                     {tag}

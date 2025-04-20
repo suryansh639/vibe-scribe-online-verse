@@ -2,6 +2,8 @@
 import { Link } from "react-router-dom";
 import { Heart, MessageSquare, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { useArticleInteractions } from "@/hooks/useArticleInteractions";
 
 // Types
 export interface ArticleProps {
@@ -33,6 +35,16 @@ const ArticleCard = ({
   likes,
   comments
 }: ArticleProps) => {
+  // Use the article interactions hook
+  const { 
+    isLiked, 
+    isBookmarked, 
+    likesCount, 
+    loading, 
+    toggleLike, 
+    toggleBookmark 
+  } = useArticleInteractions({ articleId: id });
+
   // Format the date
   const formattedDate = new Date(publishedAt).toLocaleDateString("en-US", {
     month: "short",
@@ -86,16 +98,36 @@ const ArticleCard = ({
             </div>
             
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-brand-orange p-1 h-auto">
-                <Heart size={18} className="mr-1" />
-                <span className="text-xs">{likes}</span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={cn(
+                  "text-gray-500 hover:text-brand-orange p-1 h-auto",
+                  isLiked && "text-red-500 hover:text-red-600"
+                )}
+                onClick={toggleLike}
+                disabled={loading === "like"}
+              >
+                <Heart size={18} className="mr-1" fill={isLiked ? "currentColor" : "none"} />
+                <span className="text-xs">{likesCount || likes}</span>
               </Button>
-              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-brand-orange p-1 h-auto">
-                <MessageSquare size={18} className="mr-1" />
-                <span className="text-xs">{comments}</span>
-              </Button>
-              <Button variant="ghost" size="sm" className="text-gray-500 hover:text-brand-orange p-1 h-auto">
-                <Bookmark size={18} />
+              <Link to={`/article/${id}`}>
+                <Button variant="ghost" size="sm" className="text-gray-500 hover:text-brand-orange p-1 h-auto">
+                  <MessageSquare size={18} className="mr-1" />
+                  <span className="text-xs">{comments}</span>
+                </Button>
+              </Link>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={cn(
+                  "text-gray-500 hover:text-brand-orange p-1 h-auto",
+                  isBookmarked && "text-brand-orange hover:text-brand-orangeDark"
+                )}
+                onClick={toggleBookmark}
+                disabled={loading === "bookmark"}
+              >
+                <Bookmark size={18} fill={isBookmarked ? "currentColor" : "none"} />
               </Button>
             </div>
           </div>

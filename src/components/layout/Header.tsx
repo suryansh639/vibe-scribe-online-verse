@@ -1,7 +1,7 @@
 
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Search, PenSquare, Bell, User } from "lucide-react";
+import { Search, PenSquare, Bell, User, Eye } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -31,6 +31,13 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <Link to="/all-articles">
+            <Button variant="ghost" className="hidden md:flex items-center gap-2 text-gray-600">
+              <Eye size={20} />
+              <span>View All</span>
+            </Button>
+          </Link>
+          
           {user ? (
             <>
               <Button variant="ghost" size="icon" className="text-gray-600">
@@ -60,10 +67,10 @@ const Header = () => {
                     <Link to="/dashboard" className="w-full cursor-pointer">My Stories</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard" className="w-full cursor-pointer">Bookmarks</Link>
+                    <Link to="/dashboard?tab=bookmarks" className="w-full cursor-pointer">Bookmarks</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/settings" className="w-full cursor-pointer">Settings</Link>
+                    <Link to="/edit-profile" className="w-full cursor-pointer">Edit Profile</Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem className="text-red-500 cursor-pointer" onClick={() => signOut()}>
                     Sign Out
