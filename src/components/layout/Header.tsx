@@ -1,5 +1,6 @@
 
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, PenSquare, Bell, User, Eye } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -7,6 +8,16 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/all-articles?search=${encodeURIComponent(searchTerm)}`);
+      setSearchTerm("");
+    }
+  };
 
   return (
     <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
@@ -21,12 +32,16 @@ const Header = () => {
           </Link>
           
           <div className="hidden md:flex items-center relative">
-            <Search className="absolute left-3 text-gray-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Search articles..." 
-              className="pl-10 pr-4 py-2 rounded-full bg-gray-100 focus:bg-white border border-gray-200 focus:border-brand-orange focus:outline-none w-64" 
-            />
+            <form onSubmit={handleSearch} className="relative w-full">
+              <Search className="absolute left-3 text-gray-400 top-1/2 -translate-y-1/2" size={18} />
+              <input 
+                type="text" 
+                placeholder="Search articles..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 pr-4 py-2 rounded-full bg-gray-100 focus:bg-white border border-gray-200 focus:border-brand-orange focus:outline-none w-64" 
+              />
+            </form>
           </div>
         </div>
         

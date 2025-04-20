@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -17,8 +16,9 @@ const AllArticles = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   
-  // Get tag from URL params
+  // Get tag and search from URL params
   const tagFilter = searchParams.get("tag");
+  const searchFilter = searchParams.get("search");
   
   useEffect(() => {
     const fetchArticles = async () => {
@@ -38,7 +38,14 @@ const AllArticles = () => {
         query = query.contains("tags", [tagFilter]);
       }
       
-      const { data: articles, error } = await query;
+      // Apply search filter if present
+      if (searchFilter) {
+        query = query.or(
+          `title.ilike.%${searchFilter}%,excerpt.ilike.%${searchFilter}%,tags.cs.{%${searchFilter}%}`
+        );
+      }
+      
+      const { data: articlesData, error } = await query;
       
       if (error) {
         console.error("Error fetching articles:", error);
@@ -46,7 +53,7 @@ const AllArticles = () => {
         return;
       }
       
-      const formattedArticles = articles.map(article => ({
+      const formattedArticles = articlesData.map(article => ({
         id: article.id,
         title: article.title,
         excerpt: article.excerpt || "",
@@ -100,34 +107,22 @@ const AllArticles = () => {
     
     fetchArticles();
     fetchPopularTags();
-  }, [tagFilter]);
+  }, [tagFilter, searchFilter]);
   
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Filter articles based on search term
-    // Note: In a real app, this would be a server-side search
-    const filteredArticles = articles.filter(article => 
-      article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      article.tags.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
-    
-    setArticles(filteredArticles);
+    if (searchTerm.trim()) {
+      setSearchParams({ search: searchTerm });
+    }
   };
   
   const clearSearch = () => {
+    setSearchParams({});
     setSearchTerm("");
-    // Reset articles to original list
-    window.location.reload();
   };
   
   const handleTagClick = (tag: string) => {
     setSearchParams({ tag });
-  };
-  
-  const clearTagFilter = () => {
-    setSearchParams({});
   };
   
   return (
@@ -138,10 +133,12 @@ const AllArticles = () => {
           <div className="md:w-3/4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
               <h1 className="text-3xl font-bold">
-                {tagFilter ? `Articles tagged "${tagFilter}"` : "All Articles"}
+                {tagFilter ? `Articles tagged "${tagFilter}"` : 
+                 searchFilter ? `Search results for "${searchFilter}"` : 
+                 "All Articles"}
               </h1>
               
-              <form onSubmit={handleSearch} className="relative w-full md:w-auto">
+              <form onSubmit={handleSearchSubmit} className="relative w-full md:w-auto">
                 <Input
                   type="text"
                   placeholder="Search articles..."
@@ -150,7 +147,7 @@ const AllArticles = () => {
                   className="pr-10 w-full md:w-64"
                 />
                 <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
-                  {searchTerm && (
+                  {(searchFilter || searchTerm) && (
                     <Button type="button" variant="ghost" size="icon" className="h-6 w-6 p-0 mr-1" onClick={clearSearch}>
                       <X size={14} />
                     </Button>
@@ -161,17 +158,6 @@ const AllArticles = () => {
                 </div>
               </form>
             </div>
-            
-            {tagFilter && (
-              <div className="mb-6 flex items-center">
-                <Badge className="px-3 py-1 bg-brand-orange text-white">
-                  {tagFilter}
-                </Badge>
-                <Button variant="ghost" size="sm" onClick={clearTagFilter} className="ml-2 h-7 text-xs">
-                  Clear filter
-                </Button>
-              </div>
-            )}
             
             {loading ? (
               // Loading skeleton
@@ -197,14 +183,13 @@ const AllArticles = () => {
                 <p className="text-gray-600">
                   {tagFilter 
                     ? `No articles with the tag "${tagFilter}" were found.` 
-                    : "No articles match your search criteria."}
+                    : searchFilter 
+                    ? `No articles match your search for "${searchFilter}".`
+                    : "No articles are available."}
                 </p>
-                {(tagFilter || searchTerm) && (
+                {(tagFilter || searchFilter) && (
                   <Button 
-                    onClick={() => {
-                      clearTagFilter();
-                      clearSearch();
-                    }}
+                    onClick={clearSearch}
                     className="mt-4"
                   >
                     View all articles

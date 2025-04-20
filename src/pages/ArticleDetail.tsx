@@ -21,6 +21,7 @@ const ArticleDetail = () => {
   const [relatedArticles, setRelatedArticles] = useState<any[]>([]);
   const [popularTags, setPopularTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [commentsRefreshTrigger, setCommentsRefreshTrigger] = useState(0);
   
   useEffect(() => {
@@ -35,9 +36,14 @@ const ArticleDetail = () => {
             author:profiles(*)
           `)
           .eq("id", id)
+          .eq("status", "published")
           .single();
           
         if (error) throw error;
+        if (!data) {
+          setError("Article not found or not published");
+          return;
+        }
         
         setArticle({
           ...data,
@@ -100,6 +106,7 @@ const ArticleDetail = () => {
         }
       } catch (error) {
         console.error("Error fetching article:", error);
+        setError("An error occurred while fetching the article");
       } finally {
         setLoading(false);
       }
@@ -146,14 +153,14 @@ const ArticleDetail = () => {
     );
   }
   
-  if (!article) {
+  if (error || !article) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-16 text-center">
           <Alert className="max-w-lg mx-auto">
             <AlertTitle>Article Not Found</AlertTitle>
             <AlertDescription>
-              The article you're looking for doesn't exist or has been removed.
+              {error || "The article you're looking for doesn't exist or has been removed."}
             </AlertDescription>
           </Alert>
           <Link to="/" className="mt-8 inline-block">
