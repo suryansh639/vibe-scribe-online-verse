@@ -14,6 +14,7 @@ import ArticleActions from "@/components/articles/ArticleActions";
 import AuthorBio from "@/components/articles/AuthorBio";
 import RelatedArticles from "@/components/articles/RelatedArticles";
 import PopularTopics from "@/components/articles/PopularTopics";
+import { mockArticles } from "@/data/mockData";
 
 const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -29,6 +30,7 @@ const ArticleDetail = () => {
       if (!id) return;
       
       try {
+        // First try to get the article from Supabase
         const { data, error } = await supabase
           .from("articles")
           .select(`
@@ -39,70 +41,112 @@ const ArticleDetail = () => {
           .eq("status", "published")
           .single();
           
-        if (error) throw error;
-        if (!data) {
-          setError("Article not found or not published");
-          return;
-        }
-        
-        setArticle({
-          ...data,
-          author: {
-            id: data.author.id,
-            name: data.author.full_name || data.author.username || "Anonymous",
-            avatar: data.author.avatar_url,
-            bio: data.author.bio
-          }
-        });
-        
-        // Fetch related articles based on tags
-        if (data.tags && data.tags.length > 0) {
-          const { data: relatedData } = await supabase
-            .from("articles")
-            .select(`
-              *,
-              profiles(*)
-            `)
-            .neq("id", id)
-            .eq("status", "published")
-            .overlaps("tags", data.tags)
-            .limit(3);
-            
-          if (relatedData) {
-            setRelatedArticles(relatedData.map(article => ({
-              id: article.id,
-              title: article.title,
-              coverImage: article.cover_image,
-              author: {
-                id: article.profiles.id,
-                name: article.profiles.full_name || article.profiles.username || "Anonymous",
-                avatar: article.profiles.avatar_url
-              }
-            })));
-          }
-        }
-        
-        // Fetch popular tags
-        const { data: tagsData } = await supabase
-          .from("articles")
-          .select("tags")
-          .eq("status", "published");
+        if (error) {
+          console.log("Supabase error or article not found, checking mock data:", error);
           
-        if (tagsData) {
-          const tagCounts: Record<string, number> = {};
-          tagsData.forEach(article => {
-            if (!article.tags) return;
-            article.tags.forEach((tag: string) => {
-              tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+          // If not found in Supabase, check mock data
+          const mockArticle = mockArticles.find(article => article.id === id);
+          
+          if (mockArticle) {
+            console.log("Found in mock data:", mockArticle);
+            setArticle({
+              ...mockArticle,
+              author: mockArticle.author || {
+                id: "mock-author",
+                name: "Mock Author",
+                avatar: "/placeholder.svg",
+                bio: "This is a mock author bio for demonstration purposes."
+              }
             });
+            
+            // Set related articles from mock data
+            setRelatedArticles(
+              mockArticles
+                .filter(article => article.id !== id)
+                .slice(0, 3)
+                .map(article => ({
+                  id: article.id,
+                  title: article.title,
+                  coverImage: article.coverImage,
+                  author: article.author || {
+                    id: "mock-author",
+                    name: "Mock Author",
+                    avatar: "/placeholder.svg"
+                  }
+                }))
+            );
+            
+            // Set popular tags from mock data
+            const allTags = mockArticles.flatMap(article => article.tags || []);
+            const uniqueTags = [...new Set(allTags)];
+            setPopularTags(uniqueTags.slice(0, 12));
+            
+            setLoading(false);
+            return;
+          } else {
+            setError("Article not found");
+          }
+        } else if (data) {
+          // Article found in Supabase
+          setArticle({
+            ...data,
+            author: {
+              id: data.author.id,
+              name: data.author.full_name || data.author.username || "Anonymous",
+              avatar: data.author.avatar_url,
+              bio: data.author.bio
+            }
           });
           
-          const sortedTags = Object.entries(tagCounts)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 12)
-            .map(([tag]) => tag);
+          // Fetch related articles based on tags
+          if (data.tags && data.tags.length > 0) {
+            const { data: relatedData } = await supabase
+              .from("articles")
+              .select(`
+                *,
+                profiles(*)
+              `)
+              .neq("id", id)
+              .eq("status", "published")
+              .overlaps("tags", data.tags)
+              .limit(3);
+              
+            if (relatedData) {
+              setRelatedArticles(relatedData.map(article => ({
+                id: article.id,
+                title: article.title,
+                coverImage: article.cover_image,
+                author: {
+                  id: article.profiles.id,
+                  name: article.profiles.full_name || article.profiles.username || "Anonymous",
+                  avatar: article.profiles.avatar_url
+                }
+              })));
+            }
+          }
+          
+          // Fetch popular tags
+          const { data: tagsData } = await supabase
+            .from("articles")
+            .select("tags")
+            .eq("status", "published");
             
-          setPopularTags(sortedTags);
+          if (tagsData) {
+            const tagCounts: Record<string, number> = {};
+            tagsData.forEach(article => {
+              if (!article.tags) return;
+              article.tags.forEach((tag: string) => {
+                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+              });
+            });
+            
+            const sortedTags = Object.entries(tagCounts)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 12)
+              .map(([tag]) => tag);
+              
+            setPopularTags(sortedTags);
+          }
         }
       } catch (error) {
         console.error("Error fetching article:", error);
@@ -180,9 +224,9 @@ const ArticleDetail = () => {
             <ArticleHeader
               title={article.title}
               author={article.author}
-              publishedAt={article.published_at || article.created_at}
-              readTime={article.read_time}
-              coverImage={article.cover_image}
+              publishedAt={article.publishedAt || article.published_at || article.created_at}
+              readTime={article.readTime || article.read_time || "5 min read"}
+              coverImage={article.coverImage || article.cover_image}
             />
             
             <ArticleContent
@@ -193,8 +237,8 @@ const ArticleDetail = () => {
             
             <ArticleActions
               articleId={article.id}
-              initialLikes={article.likes}
-              initialComments={article.comments}
+              initialLikes={article.likes || 0}
+              initialComments={article.comments || 0}
             />
             
             <AuthorBio author={article.author} />
