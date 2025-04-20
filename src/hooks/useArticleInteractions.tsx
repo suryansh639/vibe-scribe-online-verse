@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -57,6 +56,51 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
     checkInteractions();
   }, [user, articleId]);
 
+  const toggleBookmark = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to bookmark articles",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setLoading("bookmark");
+
+    try {
+      if (isBookmarked) {
+        // Remove bookmark
+        await supabase
+          .from("bookmarks")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("article_id", articleId);
+
+        setIsBookmarked(false);
+      } else {
+        // Add bookmark
+        await supabase
+          .from("bookmarks")
+          .insert({
+            user_id: user.id,
+            article_id: articleId,
+          });
+
+        setIsBookmarked(true);
+      }
+    } catch (error) {
+      console.error("Error toggling bookmark:", error);
+      toast({
+        title: "Action failed",
+        description: "Failed to bookmark article. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(null);
+    }
+  };
+
   const toggleLike = async () => {
     if (!user) {
       toast({
@@ -97,51 +141,6 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
       toast({
         title: "Action failed",
         description: "Failed to like article. Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(null);
-    }
-  };
-
-  const toggleBookmark = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to bookmark articles",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setLoading("bookmark");
-
-    try {
-      if (isBookmarked) {
-        // Remove bookmark
-        await supabase
-          .from("bookmarks")
-          .delete()
-          .eq("user_id", user.id)
-          .eq("article_id", articleId);
-
-        setIsBookmarked(false);
-      } else {
-        // Add bookmark
-        await supabase
-          .from("bookmarks")
-          .insert({
-            user_id: user.id,
-            article_id: articleId,
-          });
-
-        setIsBookmarked(true);
-      }
-    } catch (error) {
-      console.error("Error toggling bookmark:", error);
-      toast({
-        title: "Action failed",
-        description: "Failed to bookmark article. Please try again.",
         variant: "destructive",
       });
     } finally {

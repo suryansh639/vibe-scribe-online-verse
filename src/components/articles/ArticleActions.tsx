@@ -2,6 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { Heart, MessageSquare, Bookmark, Share2 } from "lucide-react";
 import { useArticleInteractions } from "@/hooks/useArticleInteractions";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ArticleActionsProps {
   articleId: string;
@@ -10,6 +12,8 @@ interface ArticleActionsProps {
 }
 
 const ArticleActions = ({ articleId, initialLikes, initialComments }: ArticleActionsProps) => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const { 
     isLiked, 
     isBookmarked, 
@@ -18,6 +22,26 @@ const ArticleActions = ({ articleId, initialLikes, initialComments }: ArticleAct
     toggleLike, 
     toggleBookmark 
   } = useArticleInteractions({ articleId });
+
+  const handleBookmarkClick = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to bookmark articles",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    await toggleBookmark();
+    
+    toast({
+      title: isBookmarked ? "Bookmark removed" : "Article bookmarked",
+      description: isBookmarked 
+        ? "Article has been removed from your bookmarks" 
+        : "Article has been added to your bookmarks",
+    });
+  };
 
   return (
     <div className="flex items-center justify-between mb-10 py-4 border-t border-b border-gray-200">
@@ -41,7 +65,7 @@ const ArticleActions = ({ articleId, initialLikes, initialComments }: ArticleAct
           variant="ghost" 
           size="icon"
           className={isBookmarked ? 'text-brand-orange' : 'text-gray-600'}
-          onClick={toggleBookmark}
+          onClick={handleBookmarkClick}
           disabled={loading === "bookmark"}
         >
           <Bookmark size={20} fill={isBookmarked ? "currentColor" : "none"} />

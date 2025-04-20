@@ -1,4 +1,3 @@
-
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +13,7 @@ import ArticleActions from "@/components/articles/ArticleActions";
 import AuthorBio from "@/components/articles/AuthorBio";
 import RelatedArticles from "@/components/articles/RelatedArticles";
 import PopularTopics from "@/components/articles/PopularTopics";
-import { mockArticles } from "@/data/mockData";
+import { articles } from "@/data/mockData";
 
 const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,7 +44,7 @@ const ArticleDetail = () => {
           console.log("Supabase error or article not found, checking mock data:", error);
           
           // If not found in Supabase, check mock data
-          const mockArticle = mockArticles.find(article => article.id === id);
+          const mockArticle = articles.find(article => article.id === id);
           
           if (mockArticle) {
             console.log("Found in mock data:", mockArticle);
@@ -61,7 +60,7 @@ const ArticleDetail = () => {
             
             // Set related articles from mock data
             setRelatedArticles(
-              mockArticles
+              articles
                 .filter(article => article.id !== id)
                 .slice(0, 3)
                 .map(article => ({
@@ -77,14 +76,12 @@ const ArticleDetail = () => {
             );
             
             // Set popular tags from mock data
-            const allTags = mockArticles.flatMap(article => article.tags || []);
-            const uniqueTags = [...new Set(allTags)];
+            const allTags = articles.flatMap(article => article.tags || []);
+            const uniqueTags = [...new Set(allTags)] as string[];
             setPopularTags(uniqueTags.slice(0, 12));
             
             setLoading(false);
             return;
-          } else {
-            setError("Article not found");
           }
         } else if (data) {
           // Article found in Supabase
