@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,45 +17,39 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
   const [likesCount, setLikesCount] = useState(0);
   const [loading, setLoading] = useState<InteractionType | null>(null);
 
-  // Always fetch up-to-date like/bookmark data from Supabase
   useEffect(() => {
-    if (!articleId) return;
+    if (!user || !articleId) return;
 
     const checkInteractions = async () => {
+      // Check if user has liked the article
+      const { data: likeData } = await supabase
+        .from("article_likes")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("article_id", articleId)
+        .single();
+
+      setIsLiked(!!likeData);
+
+      // Check if user has bookmarked the article
+      const { data: bookmarkData } = await supabase
+        .from("bookmarks")
+        .select("*")
+        .eq("user_id", user.id)
+        .eq("article_id", articleId)
+        .single();
+
+      setIsBookmarked(!!bookmarkData);
+
       // Get article likes count
       const { data: articleData } = await supabase
         .from("articles")
         .select("likes")
         .eq("id", articleId)
-        .maybeSingle();
+        .single();
 
       if (articleData) {
         setLikesCount(articleData.likes || 0);
-      }
-
-      if (user) {
-        // Check if user has liked the article
-        const { data: likeData } = await supabase
-          .from("article_likes")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("article_id", articleId)
-          .maybeSingle();
-
-        setIsLiked(!!likeData);
-
-        // Check if user has bookmarked the article
-        const { data: bookmarkData } = await supabase
-          .from("bookmarks")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("article_id", articleId)
-          .maybeSingle();
-
-        setIsBookmarked(!!bookmarkData);
-      } else {
-        setIsLiked(false);
-        setIsBookmarked(false);
       }
     };
 
@@ -130,14 +123,7 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
           .eq("article_id", articleId);
 
         setIsLiked(false);
-
-        // The DB trigger will decrement likes in "articles", so fetch updated count:
-        const { data: article } = await supabase
-          .from("articles")
-          .select("likes")
-          .eq("id", articleId)
-          .maybeSingle();
-        setLikesCount(article?.likes ?? 0);
+        setLikesCount(prev => Math.max(0, prev - 1));
       } else {
         // Add like
         await supabase
@@ -148,14 +134,7 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
           });
 
         setIsLiked(true);
-
-        // DB trigger will increment likes, fetch latest:
-        const { data: article } = await supabase
-          .from("articles")
-          .select("likes")
-          .eq("id", articleId)
-          .maybeSingle();
-        setLikesCount(article?.likes ?? 0);
+        setLikesCount(prev => prev + 1);
       }
     } catch (error) {
       console.error("Error toggling like:", error);

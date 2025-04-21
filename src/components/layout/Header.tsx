@@ -19,15 +19,6 @@ const Header = () => {
     }
   };
 
-  const handleSignOut = async () => {
-    try {
-      await signOut();
-      // Navigate is handled within signOut function in AuthContext
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
-
   return (
     <header className="border-b border-gray-200 bg-white sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -96,10 +87,7 @@ const Header = () => {
                   <DropdownMenuItem asChild>
                     <Link to="/edit-profile" className="w-full cursor-pointer">Edit Profile</Link>
                   </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    className="text-red-500 cursor-pointer" 
-                    onClick={handleSignOut}
-                  >
+                  <DropdownMenuItem className="text-red-500 cursor-pointer" onClick={() => signOut()}>
                     Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
