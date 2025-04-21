@@ -42,7 +42,6 @@ const Editor = () => {
     const file = e.target.files?.[0];
     if (file) {
       // In a real app, this would upload to a server
-      // For now, we'll just use a local URL
       const imageUrl = URL.createObjectURL(file);
       setCoverImage(imageUrl);
     }
@@ -54,8 +53,11 @@ const Editor = () => {
     }
     
     setIsPublishing(true);
-    
+
     try {
+      // Use a default like count for new articles. Example: 365.
+      const initialLikes = 365;
+
       const { data: article, error } = await supabase
         .from('articles')
         .insert({
@@ -64,8 +66,11 @@ const Editor = () => {
           cover_image: coverImage,
           tags,
           author_id: user?.id,
-          status: 'pending', // Set status to pending for admin approval
-          excerpt: content.substring(0, 200) + '...'
+          status: 'published', // Now published
+          excerpt: content.substring(0, 200) + '...',
+          likes: initialLikes,
+          comments: 0,
+          published: true
         })
         .select()
         .single();
@@ -90,7 +95,6 @@ const Editor = () => {
       <div className="container mx-auto px-4 py-8">
         <header className="mb-8 flex justify-between items-center">
           <h1 className="text-3xl font-bold">Create a new story</h1>
-          
           <div className="flex gap-3">
             <Button 
               variant="outline" 
@@ -110,7 +114,6 @@ const Editor = () => {
         </header>
         
         <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
-          {/* Title input */}
           <div className="mb-6">
             <Input
               type="text"
@@ -121,7 +124,6 @@ const Editor = () => {
             />
           </div>
           
-          {/* Cover image upload */}
           <div className="mb-6">
             {coverImage ? (
               <div className="relative">
@@ -164,7 +166,6 @@ const Editor = () => {
             )}
           </div>
           
-          {/* Content editor - simple for now, could be replaced with a rich text editor */}
           <div className="mb-6">
             <Textarea
               value={content}
@@ -174,7 +175,6 @@ const Editor = () => {
             />
           </div>
           
-          {/* Tags input */}
           <div>
             <Label htmlFor="tags" className="mb-2 block">Tags</Label>
             <div className="flex flex-wrap gap-2 mb-3">
