@@ -1,5 +1,6 @@
 
 import { Badge } from "@/components/ui/badge";
+import { Link } from "react-router-dom";
 
 interface PopularTopicsSidebarProps {
   tags: string[];
@@ -26,6 +27,12 @@ const PopularTopicsSidebar = ({
         </Badge>
       ))}
     </div>
+    <Link 
+      to="/all-articles" 
+      className="text-brand-orange hover:text-brand-orangeDark block mt-4 text-sm font-medium"
+    >
+      View All Articles
+    </Link>
   </div>
 );
 

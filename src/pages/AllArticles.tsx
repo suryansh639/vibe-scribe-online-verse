@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,15 +18,25 @@ const AllArticles = () => {
   const tagFilter = searchParams.get("tag");
   const searchFilter = searchParams.get("search");
 
-  useEffect(() => {
-    const fetchArticles = async () => {
-      setLoading(true);
+  // Memoize fetchArticles to prevent unnecessary re-renders
+  const fetchArticles = useCallback(async () => {
+    setLoading(true);
 
+    try {
       let query = supabase
         .from("articles")
         .select(`
-          *,
-          profiles(*)
+          id,
+          title,
+          excerpt,
+          cover_image,
+          published_at,
+          created_at,
+          read_time,
+          tags,
+          likes,
+          comments,
+          profiles(id, full_name, username, avatar_url)
         `)
         .eq("status", "published")
         .order("published_at", { ascending: false });
@@ -43,10 +53,19 @@ const AllArticles = () => {
         );
       }
 
+      // Set a reasonable limit to improve performance
+      query = query.limit(50);
+
       const { data: articlesData, error } = await query;
 
-      if (error || !articlesData) {
+      if (error) {
         console.error("Error fetching articles:", error);
+        setLoading(false);
+        return;
+      }
+
+      if (!articlesData || articlesData.length === 0) {
+        setArticles([]);
         setLoading(false);
         return;
       }
@@ -69,14 +88,21 @@ const AllArticles = () => {
       }));
 
       setArticles(formattedArticles);
+    } catch (err) {
+      console.error("Error in fetching articles:", err);
+    } finally {
       setLoading(false);
-    };
+    }
+  }, [tagFilter, searchFilter]);
 
-    const fetchPopularTags = async () => {
+  // Optimize popular tags fetching
+  const fetchPopularTags = useCallback(async () => {
+    try {
       const { data: articlesData, error } = await supabase
         .from("articles")
         .select("tags")
-        .eq("status", "published");
+        .eq("status", "published")
+        .limit(100); // Limit to improve performance
 
       if (error || !articlesData) {
         console.error("Error fetching tags:", error);
@@ -101,11 +127,15 @@ const AllArticles = () => {
         .map(([tag]) => tag);
 
       setPopularTags(sortedTags);
-    };
+    } catch (err) {
+      console.error("Error in fetching popular tags:", err);
+    }
+  }, []);
 
-    fetchArticles();
-    fetchPopularTags();
-  }, [tagFilter, searchFilter]);
+  useEffect(() => {
+    // Load articles and tags in parallel
+    Promise.all([fetchArticles(), fetchPopularTags()]);
+  }, [fetchArticles, fetchPopularTags]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
