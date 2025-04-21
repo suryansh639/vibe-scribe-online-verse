@@ -68,7 +68,7 @@ const HomePage = () => {
                 {popularTags.map(tag => (
                   <Link
                     key={tag}
-                    to={`/tag/${tag}`}
+                    to={`/all-articles?tag=${encodeURIComponent(tag)}`}
                     className="text-sm px-3 py-1 bg-white border border-gray-200 hover:bg-gray-100 rounded-full text-gray-700"
                   >
                     {tag}
@@ -76,7 +76,7 @@ const HomePage = () => {
                 ))}
               </div>
             </div>
-            
+
             {/* Newsletter signup */}
             <div className="bg-brand-orange bg-opacity-10 rounded-lg p-6">
               <h3 className="font-bold text-lg mb-2">Stay in the loop</h3>

@@ -53,7 +53,7 @@ const ArticleActions = ({ articleId, initialLikes, initialComments }: ArticleAct
           disabled={loading === "like"}
         >
           <Heart size={20} fill={isLiked ? "currentColor" : "none"} />
-          <span>{likesCount || initialLikes || 0}</span>
+          <span>{typeof likesCount === "number" ? likesCount : (initialLikes || 0)}</span>
         </Button>
         <Button variant="ghost" className="flex items-center gap-2 text-gray-600">
           <MessageSquare size={20} />
