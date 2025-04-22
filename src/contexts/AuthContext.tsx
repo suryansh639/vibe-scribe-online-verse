@@ -8,7 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 interface AuthContextType {
   session: Session | null;
   user: User | null;
-  profile: any; // We'll create a more specific type later
+  profile: any;
   signUp: (email: string, password: string, metadata?: object) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -26,9 +26,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener first
+    // First set up the auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log("Auth state changed:", event, session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -38,9 +39,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
-
-          if (profileData) {
+            .maybeSingle();
+            
+          if (error) {
+            console.error("Error fetching profile:", error);
+          } else {
             setProfile(profileData);
           }
         } else {
@@ -50,25 +53,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     );
 
     // Then check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Initial session:", session);
       setSession(session);
       setUser(session?.user ?? null);
-
+      
       if (session?.user) {
         // Fetch user profile
-        const { data: profileData, error } = await supabase
+        supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
-
-        if (profileData) {
-          setProfile(profileData);
-        }
+          .maybeSingle()
+          .then(({ data: profileData, error }) => {
+            if (error) {
+              console.error("Error fetching profile:", error);
+            } else {
+              setProfile(profileData);
+            }
+          });
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signUp = async (email: string, password: string, metadata?: object) => {
@@ -147,13 +156,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      
       toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
       });
       
       navigate('/signin');
     } catch (error: any) {
+      console.error("Error signing out:", error);
       toast({
         variant: "destructive",
         title: "Error signing out",

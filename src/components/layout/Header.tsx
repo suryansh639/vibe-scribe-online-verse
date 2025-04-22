@@ -1,13 +1,14 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Search, PenSquare, Bell, User, Eye } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
@@ -22,9 +23,18 @@ const Header = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
-      // Navigate is handled within signOut function in AuthContext
-    } catch (error) {
+      toast({
+        title: "Signed out successfully",
+        description: "You have been signed out of your account.",
+      });
+      navigate("/signin");
+    } catch (error: any) {
       console.error("Error signing out:", error);
+      toast({
+        title: "Error signing out",
+        description: error.message || "An error occurred while signing out.",
+        variant: "destructive",
+      });
     }
   };
 
