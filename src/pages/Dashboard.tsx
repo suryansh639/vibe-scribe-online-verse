@@ -6,7 +6,8 @@ import { ProfileCard } from "@/components/dashboard/ProfileCard";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Suspense, lazy } from "react";
+import { Suspense, lazy, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 // Lazy load the tabs component to improve initial load time
 const LazyDashboardTabs = lazy(() => import("@/components/dashboard/DashboardTabs").then(
@@ -15,7 +16,15 @@ const LazyDashboardTabs = lazy(() => import("@/components/dashboard/DashboardTab
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { profile, myArticles, bookmarkedArticles, likedArticles, loading } = useDashboardData();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!user && !loading) {
+      navigate('/signin');
+    }
+  }, [user, loading, navigate]);
 
   if (!user) {
     return (

@@ -21,15 +21,20 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
   // Fetch initial interaction state
   useEffect(() => {
     if (!articleId) return;
-
+    
     const checkInteractions = async () => {
       try {
         // Get article likes count
-        const { data: articleData } = await supabase
+        const { data: articleData, error: articleError } = await supabase
           .from("articles")
           .select("likes")
           .eq("id", articleId)
           .maybeSingle();
+
+        if (articleError) {
+          console.error("Error fetching article data:", articleError);
+          return;
+        }
 
         if (articleData) {
           setLikesCount(articleData.likes || 0);
@@ -37,24 +42,32 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
 
         if (user) {
           // Check if user has liked the article
-          const { data: likeData } = await supabase
+          const { data: likeData, error: likeError } = await supabase
             .from("article_likes")
             .select("*")
             .eq("user_id", user.id)
             .eq("article_id", articleId)
             .maybeSingle();
 
-          setIsLiked(!!likeData);
+          if (likeError) {
+            console.error("Error checking like status:", likeError);
+          } else {
+            setIsLiked(!!likeData);
+          }
 
           // Check if user has bookmarked the article
-          const { data: bookmarkData } = await supabase
+          const { data: bookmarkData, error: bookmarkError } = await supabase
             .from("bookmarks")
             .select("*")
             .eq("user_id", user.id)
             .eq("article_id", articleId)
             .maybeSingle();
 
-          setIsBookmarked(!!bookmarkData);
+          if (bookmarkError) {
+            console.error("Error checking bookmark status:", bookmarkError);
+          } else {
+            setIsBookmarked(!!bookmarkData);
+          }
         } else {
           setIsLiked(false);
           setIsBookmarked(false);
@@ -146,6 +159,13 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
           .eq("article_id", articleId);
 
         if (error) throw error;
+        
+        // Update article likes count in the articles table
+        await supabase
+          .from("articles")
+          .update({ likes: likesCount - 1 })
+          .eq("id", articleId);
+        
         setIsLiked(false);
         setLikesCount(prev => Math.max(0, prev - 1));
         
@@ -163,6 +183,13 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
           });
 
         if (error) throw error;
+        
+        // Update article likes count in the articles table
+        await supabase
+          .from("articles")
+          .update({ likes: likesCount + 1 })
+          .eq("id", articleId);
+        
         setIsLiked(true);
         setLikesCount(prev => prev + 1);
         

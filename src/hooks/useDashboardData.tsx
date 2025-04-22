@@ -15,7 +15,7 @@ export const useDashboardData = () => {
   const [likedArticles, setLikedArticles] = useState<ArticleListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Optimize the profile fetching
+  // Fetch profile data
   const fetchProfile = useCallback(async () => {
     if (!user) return null;
     
@@ -23,7 +23,7 @@ export const useDashboardData = () => {
       .from('profiles')
       .select('*')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
     
     if (error) {
       console.error("Error fetching profile:", error);
@@ -33,7 +33,7 @@ export const useDashboardData = () => {
     return data;
   }, [user]);
 
-  // Optimize the articles fetching
+  // Fetch articles authored by the user
   const fetchMyArticles = useCallback(async () => {
     if (!user) return [];
     
@@ -45,8 +45,7 @@ export const useDashboardData = () => {
         author:profiles(id, full_name, username, avatar_url)
       `)
       .eq('author_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(10); // Limit to improve performance
+      .order('created_at', { ascending: false });
     
     if (error || !data) {
       console.error("Error fetching articles:", error);
@@ -71,90 +70,106 @@ export const useDashboardData = () => {
     }));
   }, [user]);
 
-  // Optimize bookmarks fetching
+  // Fetch bookmarked articles
   const fetchBookmarkedArticles = useCallback(async () => {
     if (!user) return [];
     
-    const { data, error } = await supabase
+    // First get all bookmark IDs
+    const { data: bookmarks, error: bookmarksError } = await supabase
       .from('bookmarks')
-      .select(`
-        article_id,
-        articles!inner(
-          id, title, excerpt, cover_image, published_at, created_at,
-          read_time, tags, likes, comments,
-          profiles(id, full_name, username, avatar_url)
-        )
-      `)
-      .eq('user_id', user.id)
-      .limit(10); // Limit to improve performance
+      .select('article_id')
+      .eq('user_id', user.id);
     
-    if (error || !data) {
-      console.error("Error fetching bookmarks:", error);
+    if (bookmarksError || !bookmarks || bookmarks.length === 0) {
+      console.error("Error fetching bookmarks or no bookmarks found:", bookmarksError);
       return [];
     }
     
-    return data.map(bookmark => {
-      const article = bookmark.articles;
-      return {
-        id: article.id,
-        title: article.title,
-        excerpt: article.excerpt || "",
-        coverImage: article.cover_image,
-        author: {
-          id: article.profiles.id,
-          name: article.profiles.full_name || article.profiles.username || "Anonymous",
-          avatar: article.profiles.avatar_url
-        },
-        publishedAt: article.published_at || article.created_at,
-        readTime: article.read_time || "5 min read",
-        tags: article.tags || [],
-        likes: article.likes || 0,
-        comments: article.comments || 0
-      };
-    });
+    // Get the article IDs from bookmarks
+    const articleIds = bookmarks.map(bookmark => bookmark.article_id);
+    
+    // Fetch the full article data using those IDs
+    const { data: articles, error: articlesError } = await supabase
+      .from('articles')
+      .select(`
+        id, title, excerpt, cover_image, published_at, created_at, 
+        read_time, tags, likes, comments,
+        profiles!articles_author_id_fkey(id, full_name, username, avatar_url)
+      `)
+      .in('id', articleIds);
+    
+    if (articlesError || !articles) {
+      console.error("Error fetching bookmarked articles:", articlesError);
+      return [];
+    }
+    
+    return articles.map(article => ({
+      id: article.id,
+      title: article.title,
+      excerpt: article.excerpt || "",
+      coverImage: article.cover_image,
+      author: {
+        id: article.profiles.id,
+        name: article.profiles.full_name || article.profiles.username || "Anonymous",
+        avatar: article.profiles.avatar_url
+      },
+      publishedAt: article.published_at || article.created_at,
+      readTime: article.read_time || "5 min read",
+      tags: article.tags || [],
+      likes: article.likes || 0,
+      comments: article.comments || 0
+    }));
   }, [user]);
 
-  // Optimize likes fetching
+  // Fetch liked articles
   const fetchLikedArticles = useCallback(async () => {
     if (!user) return [];
     
-    const { data, error } = await supabase
+    // First get all article IDs the user has liked
+    const { data: likes, error: likesError } = await supabase
       .from('article_likes')
-      .select(`
-        article_id,
-        articles!inner(
-          id, title, excerpt, cover_image, published_at, created_at,
-          read_time, tags, likes, comments,
-          profiles(id, full_name, username, avatar_url)
-        )
-      `)
-      .eq('user_id', user.id)
-      .limit(10); // Limit to improve performance
+      .select('article_id')
+      .eq('user_id', user.id);
     
-    if (error || !data) {
-      console.error("Error fetching likes:", error);
+    if (likesError || !likes || likes.length === 0) {
+      console.error("Error fetching likes or no likes found:", likesError);
       return [];
     }
     
-    return data.map(like => {
-      const article = like.articles;
-      return {
-        id: article.id,
-        title: article.title,
-        excerpt: article.excerpt || "",
-        coverImage: article.cover_image,
-        author: {
-          id: article.profiles.id,
-          name: article.profiles.full_name || article.profiles.username || "Anonymous",
-          avatar: article.profiles.avatar_url
-        },
-        publishedAt: article.published_at || article.created_at,
-        readTime: article.read_time || "5 min read",
-        tags: article.tags || [],
-        likes: article.likes || 0,
-        comments: article.comments || 0
-      };
-    });
+    // Get the article IDs from likes
+    const articleIds = likes.map(like => like.article_id);
+    
+    // Fetch the full article data using those IDs
+    const { data: articles, error: articlesError } = await supabase
+      .from('articles')
+      .select(`
+        id, title, excerpt, cover_image, published_at, created_at, 
+        read_time, tags, likes, comments,
+        profiles!articles_author_id_fkey(id, full_name, username, avatar_url)
+      `)
+      .in('id', articleIds);
+    
+    if (articlesError || !articles) {
+      console.error("Error fetching liked articles:", articlesError);
+      return [];
+    }
+    
+    return articles.map(article => ({
+      id: article.id,
+      title: article.title,
+      excerpt: article.excerpt || "",
+      coverImage: article.cover_image,
+      author: {
+        id: article.profiles.id,
+        name: article.profiles.full_name || article.profiles.username || "Anonymous",
+        avatar: article.profiles.avatar_url
+      },
+      publishedAt: article.published_at || article.created_at,
+      readTime: article.read_time || "5 min read",
+      tags: article.tags || [],
+      likes: article.likes || 0,
+      comments: article.comments || 0
+    }));
   }, [user]);
 
   useEffect(() => {
@@ -187,6 +202,15 @@ export const useDashboardData = () => {
     };
     
     fetchData();
+    
+    // Set up a subscription to refresh data when auth state changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
+      fetchData();
+    });
+    
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, [user, fetchProfile, fetchMyArticles, fetchBookmarkedArticles, fetchLikedArticles]);
 
   return {
