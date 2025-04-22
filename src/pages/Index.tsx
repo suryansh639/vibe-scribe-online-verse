@@ -1,11 +1,15 @@
 
+import { Suspense, lazy } from "react";
 import Layout from "@/components/layout/Layout";
-import FeaturedArticle from "@/components/articles/FeaturedArticle";
-import ArticleCard from "@/components/articles/ArticleCard";
 import { articles, popularTags } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
+// Lazy load components for better performance
+const FeaturedArticle = lazy(() => import("@/components/articles/FeaturedArticle"));
+const ArticleCard = lazy(() => import("@/components/articles/ArticleCard"));
 
 const HomePage = () => {
   // Get the featured article
@@ -20,7 +24,15 @@ const HomePage = () => {
         {/* Hero section with featured article */}
         <section className="mb-16">
           <h1 className="text-4xl font-bold mb-8 text-center">Discover stories that matter</h1>
-          {featuredArticle && <FeaturedArticle {...featuredArticle} />}
+          {featuredArticle && (
+            <Suspense fallback={
+              <div className="bg-gray-100 rounded-xl p-8 flex justify-center items-center h-64">
+                <LoadingSpinner size="lg" />
+              </div>
+            }>
+              <FeaturedArticle {...featuredArticle} />
+            </Suspense>
+          )}
         </section>
 
         {/* Main content with sidebar layout */}
@@ -39,23 +51,41 @@ const HomePage = () => {
               </div>
               
               <TabsContent value="latest">
-                <div>
-                  {otherArticles.map(article => (
-                    <ArticleCard key={article.id} {...article} />
-                  ))}
-                </div>
-              </TabsContent>
-              
-              <TabsContent value="popular">
-                <div>
-                  {/* For demo, we'll use the same articles but sorted by likes */}
-                  {[...otherArticles]
-                    .sort((a, b) => b.likes - a.likes)
-                    .map(article => (
+                <Suspense fallback={
+                  <div className="space-y-6">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="border-b border-gray-200 py-8 flex justify-center">
+                        <LoadingSpinner />
+                      </div>
+                    ))}
+                  </div>
+                }>
+                  <div>
+                    {otherArticles.map(article => (
                       <ArticleCard key={article.id} {...article} />
                     ))}
-                </div>
-              </TabsContent>
+                  </div>
+                </TabsContent>
+              
+              <TabsContent value="popular">
+                <Suspense fallback={
+                  <div className="space-y-6">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="border-b border-gray-200 py-8 flex justify-center">
+                        <LoadingSpinner />
+                      </div>
+                    ))}
+                  </div>
+                }>
+                  <div>
+                    {/* For demo, we'll use the same articles but sorted by likes */}
+                    {[...otherArticles]
+                      .sort((a, b) => b.likes - a.likes)
+                      .map(article => (
+                        <ArticleCard key={article.id} {...article} />
+                      ))}
+                  </div>
+                </TabsContent>
             </Tabs>
           </div>
           

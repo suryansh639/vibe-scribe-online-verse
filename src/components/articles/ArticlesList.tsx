@@ -1,7 +1,11 @@
 
-import ArticleCard from "@/components/articles/ArticleCard";
+import { Suspense, lazy } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+
+// Lazy load ArticleCard for better performance
+const ArticleCard = lazy(() => import("@/components/articles/ArticleCard"));
 
 interface AuthorInfo {
   id: string;
@@ -40,7 +44,7 @@ const ArticlesList = ({
   if (loading) {
     return (
       <div className="space-y-8">
-        {[...Array(5)].map((_, index) => (
+        {[...Array(3)].map((_, index) => (
           <div key={index} className="flex gap-6">
             <div className="flex-1 space-y-3">
               <Skeleton className="h-6 w-32" />
@@ -81,7 +85,16 @@ const ArticlesList = ({
   return (
     <div className="space-y-6">
       {articles.map(article => (
-        <ArticleCard key={article.id} {...article} />
+        <Suspense 
+          key={article.id}
+          fallback={
+            <div className="border-b border-gray-200 py-8 flex justify-center">
+              <LoadingSpinner />
+            </div>
+          }
+        >
+          <ArticleCard {...article} />
+        </Suspense>
       ))}
     </div>
   );

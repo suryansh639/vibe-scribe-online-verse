@@ -5,10 +5,17 @@ import { Alert } from "@/components/ui/alert";
 import { ProfileCard } from "@/components/dashboard/ProfileCard";
 import { DashboardTabs } from "@/components/dashboard/DashboardTabs";
 import { useDashboardData } from "@/hooks/useDashboardData";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { Suspense, lazy } from "react";
+
+// Lazy load the tabs component to improve initial load time
+const LazyDashboardTabs = lazy(() => import("@/components/dashboard/DashboardTabs").then(
+  module => ({ default: module.DashboardTabs })
+));
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { profile, myArticles, bookmarkedArticles, likedArticles } = useDashboardData();
+  const { profile, myArticles, bookmarkedArticles, likedArticles, loading } = useDashboardData();
 
   if (!user) {
     return (
@@ -25,15 +32,29 @@ const Dashboard = () => {
       <div className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row items-start gap-8 mb-12">
           <div className="w-full md:w-1/4">
-            <ProfileCard profile={profile} />
+            {loading ? (
+              <div className="bg-white p-6 rounded-lg border border-gray-200 flex justify-center">
+                <LoadingSpinner />
+              </div>
+            ) : (
+              <ProfileCard profile={profile} />
+            )}
           </div>
           
           <div className="flex-1">
-            <DashboardTabs
-              myArticles={myArticles}
-              bookmarkedArticles={bookmarkedArticles}
-              likedArticles={likedArticles}
-            />
+            {loading ? (
+              <div className="bg-white p-6 rounded-lg border border-gray-200">
+                <LoadingSpinner />
+              </div>
+            ) : (
+              <Suspense fallback={<div className="bg-white p-6 rounded-lg border border-gray-200 flex justify-center"><LoadingSpinner /></div>}>
+                <LazyDashboardTabs
+                  myArticles={myArticles}
+                  bookmarkedArticles={bookmarkedArticles}
+                  likedArticles={likedArticles}
+                />
+              </Suspense>
+            )}
           </div>
         </div>
       </div>
