@@ -65,7 +65,8 @@ const HomePage = () => {
                       <ArticleCard key={article.id} {...article} />
                     ))}
                   </div>
-                </TabsContent>
+                </Suspense>
+              </TabsContent>
               
               <TabsContent value="popular">
                 <Suspense fallback={
@@ -85,7 +86,8 @@ const HomePage = () => {
                         <ArticleCard key={article.id} {...article} />
                       ))}
                   </div>
-                </TabsContent>
+                </Suspense>
+              </TabsContent>
             </Tabs>
           </div>
           
