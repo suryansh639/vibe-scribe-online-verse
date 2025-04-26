@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -50,6 +49,15 @@ const Editor = () => {
     }
   };
   
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .trim()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/[\s_-]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+  };
+
   const handlePublish = async () => {
     if (!title.trim() || !content.trim()) {
       toast({
@@ -91,7 +99,8 @@ const Editor = () => {
           published_at: new Date().toISOString(),
           read_time: readTime,
           likes: 0,
-          comments: 0
+          comments: 0,
+          slug: generateSlug(title)
         })
         .select()
         .single();
@@ -103,7 +112,7 @@ const Editor = () => {
         description: "Your article has been published successfully",
       });
       
-      navigate(`/`);
+      navigate(`/article/${generateSlug(title)}`);
     } catch (err) {
       console.error("Error publishing article:", err);
       toast({
