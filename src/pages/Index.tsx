@@ -6,24 +6,48 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/components/ui/use-toast";
+import { PenIcon } from "lucide-react";
 
 // Lazy load components for better performance
 const FeaturedArticle = lazy(() => import("@/components/articles/FeaturedArticle"));
 const ArticleCard = lazy(() => import("@/components/articles/ArticleCard"));
 
 const HomePage = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
   // Get the featured article
   const featuredArticle = articles.find(article => article.featured);
   
   // Get the other articles (non-featured)
   const otherArticles = articles.filter(article => !article.featured);
 
+  const handleWriteClick = () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to write articles",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        {/* Hero section with featured article */}
+        {/* Hero section with featured article and write button */}
         <section className="mb-16">
-          <h1 className="text-4xl font-bold mb-8 text-center">Discover stories that matter</h1>
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl font-bold">Discover stories that matter</h1>
+            <Link to={user ? "/new-story" : "/signin"} onClick={handleWriteClick}>
+              <Button className="bg-brand-orange hover:bg-brand-orangeDark text-white">
+                <PenIcon className="w-4 h-4 mr-2" />
+                Write Article
+              </Button>
+            </Link>
+          </div>
           {featuredArticle && (
             <Suspense fallback={
               <div className="bg-gray-100 rounded-xl p-8 flex justify-center items-center h-64">
