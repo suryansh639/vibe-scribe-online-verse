@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Image, X, PlusCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 const Editor = () => {
   const [title, setTitle] = useState("");
@@ -19,6 +21,7 @@ const Editor = () => {
   
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   
   const handleAddTag = () => {
     if (tagInput.trim() && !tags.includes(tagInput.trim())) {
@@ -49,45 +52,119 @@ const Editor = () => {
   
   const handlePublish = async () => {
     if (!title.trim() || !content.trim()) {
+      toast({
+        title: "Missing content",
+        description: "Please add a title and content to your article",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to publish articles",
+        variant: "destructive",
+      });
+      navigate('/signin');
       return;
     }
     
     setIsPublishing(true);
 
     try {
-      // Use a default like count for new articles. Example: 365.
-      const initialLikes = 365;
+      // Calculate an estimated read time based on content length
+      const wordCount = content.trim().split(/\s+/).length;
+      const readTime = `${Math.max(1, Math.ceil(wordCount / 200))} min read`;
 
       const { data: article, error } = await supabase
         .from('articles')
         .insert({
           title,
           content,
+          excerpt: content.substring(0, 150) + '...',
           cover_image: coverImage,
           tags,
-          author_id: user?.id,
-          status: 'published', // Now published
-          excerpt: content.substring(0, 200) + '...',
-          likes: initialLikes,
-          comments: 0,
-          published: true
+          author_id: user.id,
+          status: 'published',
+          published: true,
+          published_at: new Date().toISOString(),
+          read_time: readTime,
+          likes: 0,
+          comments: 0
         })
         .select()
         .single();
 
       if (error) throw error;
       
-      navigate(`/dashboard`);
+      toast({
+        title: "Article published!",
+        description: "Your article has been published successfully",
+      });
+      
+      navigate(`/`);
     } catch (err) {
-      console.error(err);
+      console.error("Error publishing article:", err);
+      toast({
+        title: "Publishing failed",
+        description: "There was a problem publishing your article. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsPublishing(false);
     }
   };
   
-  const handleSaveDraft = () => {
-    console.log("Saving draft:", { title, content, coverImage, tags });
-    // This would save the article as a draft
+  const handleSaveDraft = async () => {
+    if (!title.trim()) {
+      toast({
+        title: "Title required",
+        description: "Please add a title to save as draft",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to save drafts",
+        variant: "destructive",
+      });
+      navigate('/signin');
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('articles')
+        .insert({
+          title,
+          content,
+          cover_image: coverImage,
+          tags,
+          author_id: user.id,
+          status: 'draft',
+          published: false
+        });
+
+      if (error) throw error;
+      
+      toast({
+        title: "Draft saved",
+        description: "Your draft has been saved successfully",
+      });
+      
+      navigate(`/dashboard`);
+    } catch (err) {
+      console.error("Error saving draft:", err);
+      toast({
+        title: "Saving failed",
+        description: "There was a problem saving your draft. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -99,7 +176,7 @@ const Editor = () => {
             <Button 
               variant="outline" 
               onClick={handleSaveDraft}
-              disabled={isPublishing}
+              disabled={isPublishing || !title.trim()}
             >
               Save Draft
             </Button>
