@@ -46,6 +46,7 @@ const CategoryHighlights = () => {
             to={`/all-articles?tag=${category.slug}`} 
             key={category.slug}
             className="group relative overflow-hidden rounded-lg h-60 hover-scale"
+            aria-label={`View ${category.name} articles`}
           >
             <div className="absolute inset-0">
               <img 
