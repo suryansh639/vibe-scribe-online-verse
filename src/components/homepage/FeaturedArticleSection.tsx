@@ -35,7 +35,7 @@ const FeaturedArticleSection = ({ article, loading }: FeaturedArticleSectionProp
   const { user } = useAuth();
   
   return (
-    <section className="mb-16">
+    <section className="mb-8">
       <h2 className="text-3xl font-bold mb-8">Featured Story</h2>
       
       {loading ? (
