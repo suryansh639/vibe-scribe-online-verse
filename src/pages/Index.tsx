@@ -1,4 +1,3 @@
-
 import { Suspense, lazy, useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -10,6 +9,10 @@ import { useToast } from "@/components/ui/use-toast";
 import { PenIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { popularTags } from "@/data/mockData"; // Keep using mock tags for now
+import HeroSection from "@/components/homepage/HeroSection";
+import FeaturedAuthors from "@/components/homepage/FeaturedAuthors";
+import CategoryHighlights from "@/components/homepage/CategoryHighlights";
+import TestimonialsSection from "@/components/homepage/TestimonialsSection";
 
 // Lazy load components for better performance
 const FeaturedArticle = lazy(() => import("@/components/articles/FeaturedArticle"));
@@ -103,17 +106,16 @@ const HomePage = () => {
   return (
     <Layout>
       <div className="container mx-auto px-4 py-8">
-        {/* Hero section with featured article and write button */}
+        {/* Hero section */}
+        <HeroSection />
+
+        {/* Category highlights */}
+        <CategoryHighlights />
+
+        {/* Featured article section */}
         <section className="mb-16">
-          <div className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl font-bold">Discover stories that matter</h1>
-            <Link to={user ? "/new-story" : "/signin"} onClick={handleWriteClick}>
-              <Button className="bg-brand-orange hover:bg-brand-orangeDark text-white">
-                <PenIcon className="w-4 h-4 mr-2" />
-                Write Article
-              </Button>
-            </Link>
-          </div>
+          <h2 className="text-3xl font-bold mb-8">Featured Story</h2>
+          
           {loading ? (
             <div className="bg-gray-100 rounded-xl p-8 flex justify-center items-center h-64">
               <LoadingSpinner size="lg" />
@@ -141,6 +143,12 @@ const HomePage = () => {
             </div>
           )}
         </section>
+
+        {/* Testimonials section */}
+        <TestimonialsSection />
+
+        {/* Featured authors section */}
+        <FeaturedAuthors />
 
         {/* Main content with sidebar layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
