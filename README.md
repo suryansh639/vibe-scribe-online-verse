@@ -178,10 +178,6 @@ Unacceptable behavior includes:
 - Publishing others’ private information without permission
 - Trolling or insulting/provoking others
 
-## Enforcement
-
-Instances of abusive behavior may be reported by contacting the project team at [your-email@example.com].
-
 Project maintainers are responsible for clarifying and enforcing our standards.
 
 ---
