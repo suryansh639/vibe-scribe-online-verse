@@ -1,10 +1,10 @@
-# 🚀 MyProject
+# 🚀 BlogCompany
 
 A TypeScript-based web application with GitHub login support using Next.js and NextAuth.js.
 
 ## 🌐 Live Demo
 
-[🔗 https://your-app-url.vercel.app](https://your-app-url.vercel.app)
+[🔗 https://youtu.be/FXH1wzh404c](https://youtu.be/FXH1wzh404c)
 
 ---
 
@@ -186,5 +186,3 @@ Project maintainers are responsible for clarifying and enforcing our standards.
 
 ---
 ```
-
-Your project is now fully open source–ready! 🌍
