@@ -1,25 +1,18 @@
-import { Suspense, lazy, useState, useEffect } from "react";
+
+import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
-import { PenIcon } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { popularTags } from "@/data/mockData"; // Keep using mock tags for now
 import HeroSection from "@/components/homepage/HeroSection";
 import FeaturedAuthors from "@/components/homepage/FeaturedAuthors";
 import CategoryHighlights from "@/components/homepage/CategoryHighlights";
 import TestimonialsSection from "@/components/homepage/TestimonialsSection";
-
-// Lazy load components for better performance
-const FeaturedArticle = lazy(() => import("@/components/articles/FeaturedArticle"));
-const ArticleCard = lazy(() => import("@/components/articles/ArticleCard"));
+import MainContent from "@/components/homepage/MainContent";
+import Sidebar from "@/components/homepage/Sidebar";
+import FeaturedArticleSection from "@/components/homepage/FeaturedArticleSection";
 
 const HomePage = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [articles, setArticles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -89,19 +82,6 @@ const HomePage = () => {
   
   // Get the featured article
   const featuredArticle = articles.find(article => article.featured);
-  
-  // Get the other articles (non-featured)
-  const otherArticles = articles.filter(article => !article.featured);
-
-  const handleWriteClick = () => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to write articles",
-        variant: "destructive",
-      });
-    }
-  };
 
   return (
     <Layout>
@@ -113,36 +93,7 @@ const HomePage = () => {
         <CategoryHighlights />
 
         {/* Featured article section */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-8">Featured Story</h2>
-          
-          {loading ? (
-            <div className="bg-gray-100 rounded-xl p-8 flex justify-center items-center h-64">
-              <LoadingSpinner size="lg" />
-            </div>
-          ) : featuredArticle ? (
-            <Suspense fallback={
-              <div className="bg-gray-100 rounded-xl p-8 flex justify-center items-center h-64">
-                <LoadingSpinner size="lg" />
-              </div>
-            }>
-              <FeaturedArticle {...featuredArticle} />
-            </Suspense>
-          ) : (
-            <div className="bg-gray-100 rounded-xl p-8 flex justify-center items-center h-64 text-center">
-              <div>
-                <p className="text-lg font-medium mb-2">No featured articles yet</p>
-                {user && (
-                  <Link to="/new-story">
-                    <Button size="sm" className="bg-brand-orange hover:bg-brand-orangeDark text-white">
-                      Write the first featured article
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            </div>
-          )}
-        </section>
+        <FeaturedArticleSection article={featuredArticle} loading={loading} />
 
         {/* Testimonials section */}
         <TestimonialsSection />
@@ -153,139 +104,10 @@ const HomePage = () => {
         {/* Main content with sidebar layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main content - Article list */}
-          <div className="lg:col-span-2">
-            <Tabs defaultValue="latest">
-              <div className="flex justify-between items-center mb-6">
-                <TabsList>
-                  <TabsTrigger value="latest">Latest</TabsTrigger>
-                  <TabsTrigger value="popular">Popular</TabsTrigger>
-                </TabsList>
-                <Link to="/all-articles">
-                  <Button variant="ghost" className="text-brand-orange">View All</Button>
-                </Link>
-              </div>
-              
-              <TabsContent value="latest">
-                {loading ? (
-                  <div className="space-y-6">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="border-b border-gray-200 py-8 flex justify-center">
-                        <LoadingSpinner />
-                      </div>
-                    ))}
-                  </div>
-                ) : otherArticles.length > 0 ? (
-                  <Suspense fallback={
-                    <div className="space-y-6">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="border-b border-gray-200 py-8 flex justify-center">
-                          <LoadingSpinner />
-                        </div>
-                      ))}
-                    </div>
-                  }>
-                    <div>
-                      {otherArticles.map(article => (
-                        <ArticleCard key={article.id} {...article} />
-                      ))}
-                    </div>
-                  </Suspense>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">No articles published yet</p>
-                    {user && (
-                      <Link to="/new-story">
-                        <Button className="bg-brand-orange hover:bg-brand-orangeDark text-white">
-                          Write your first article
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="popular">
-                {loading ? (
-                  <div className="space-y-6">
-                    {[...Array(3)].map((_, i) => (
-                      <div key={i} className="border-b border-gray-200 py-8 flex justify-center">
-                        <LoadingSpinner />
-                      </div>
-                    ))}
-                  </div>
-                ) : otherArticles.length > 0 ? (
-                  <Suspense fallback={
-                    <div className="space-y-6">
-                      {[...Array(3)].map((_, i) => (
-                        <div key={i} className="border-b border-gray-200 py-8 flex justify-center">
-                          <LoadingSpinner />
-                        </div>
-                      ))}
-                    </div>
-                  }>
-                    <div>
-                      {/* For demo, we'll use the same articles but sorted by likes */}
-                      {[...otherArticles]
-                        .sort((a, b) => b.likes - a.likes)
-                        .map(article => (
-                          <ArticleCard key={article.id} {...article} />
-                        ))}
-                    </div>
-                  </Suspense>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 mb-4">No articles published yet</p>
-                    {user && (
-                      <Link to="/new-story">
-                        <Button className="bg-brand-orange hover:bg-brand-orangeDark text-white">
-                          Write your first article
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
+          <MainContent articles={articles} loading={loading} />
           
           {/* Sidebar */}
-          <div className="lg:col-span-1">
-            {/* Popular tags */}
-            <div className="bg-gray-50 rounded-lg p-6 mb-8">
-              <h3 className="font-bold text-lg mb-4">Popular Topics</h3>
-              <div className="flex flex-wrap gap-2">
-                {popularTags.map(tag => (
-                  <Link
-                    key={tag}
-                    to={`/all-articles?tag=${encodeURIComponent(tag)}`}
-                    className="text-sm px-3 py-1 bg-white border border-gray-200 hover:bg-gray-100 rounded-full text-gray-700"
-                  >
-                    {tag}
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Newsletter signup */}
-            <div className="bg-brand-orange bg-opacity-10 rounded-lg p-6">
-              <h3 className="font-bold text-lg mb-2">Stay in the loop</h3>
-              <p className="text-gray-600 mb-4">Get the latest articles delivered right to your inbox</p>
-              
-              <div className="space-y-3">
-                <input
-                  type="email"
-                  placeholder="Your email address"
-                  className="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-brand-orange focus:outline-none"
-                />
-                <Button className="w-full bg-brand-orange hover:bg-brand-orangeDark text-white">
-                  Subscribe
-                </Button>
-              </div>
-              <p className="text-xs text-gray-500 mt-3">
-                By subscribing, you agree to our Privacy Policy and consent to receive updates from our company.
-              </p>
-            </div>
-          </div>
+          <Sidebar popularTags={popularTags} />
         </div>
       </div>
     </Layout>
