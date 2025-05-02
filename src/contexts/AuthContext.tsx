@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -153,13 +154,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGitHub = async () => {
     try {
-      const redirectUrl = "https://preview--vibe-scribe-online-verse.lovable.app/";
-      console.log("GitHub redirect URL:", redirectUrl);
+      // Get the current URL's origin to use for redirect
+      const currentOrigin = window.location.origin;
+      console.log("Current origin for GitHub redirect:", currentOrigin);
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'github',
         options: {
-          redirectTo: redirectUrl
+          redirectTo: currentOrigin
         }
       });
       
