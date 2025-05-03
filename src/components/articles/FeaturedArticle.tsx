@@ -23,14 +23,17 @@ const FeaturedArticle = ({
   });
 
   return (
-    <article className="bg-gray-50 rounded-xl overflow-hidden mb-12 lg:grid lg:grid-cols-2 lg:gap-8">
-      <div className="h-64 lg:h-full">
+    <article className="bg-gray-50 rounded-xl overflow-hidden mb-12 lg:grid lg:grid-cols-2 lg:gap-8 shadow-md hover:shadow-lg transition-shadow duration-300">
+      <div className="h-64 lg:h-full relative overflow-hidden">
         <Link to={`/article/${id}`}>
           <img
             src={coverImage || "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d"}
             alt={title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
           />
+          <div className="absolute top-4 left-4 bg-brand-orange text-white px-3 py-1 rounded-full text-xs font-semibold">
+            Featured
+          </div>
         </Link>
       </div>
       
@@ -67,7 +70,7 @@ const FeaturedArticle = ({
         
         <div className="flex items-center justify-between mt-auto">
           <div className="flex flex-wrap gap-2">
-            {tags.slice(0, 2).map((tag) => (
+            {tags.slice(0, 3).map((tag) => (
               <Link
                 key={tag}
                 to={`/tag/${tag}`}

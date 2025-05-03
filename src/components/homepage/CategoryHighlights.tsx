@@ -9,29 +9,29 @@ interface CategoryProps {
 }
 
 const CategoryHighlights = () => {
-  // Mock data for categories
+  // Categories aligned with our sample articles
   const categories: CategoryProps[] = [
     {
       name: "Technology",
-      description: "Explore the latest in tech trends, innovations, and digital transformations",
+      description: "Explore the latest in tech trends, AI, blockchain, and digital innovations",
       image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       slug: "technology"
     },
     {
       name: "Lifestyle",
-      description: "Discover insights on wellness, personal development, and daily living",
+      description: "Discover insights on wellness, sustainability, and personal development",
       image: "https://images.unsplash.com/photo-1500673922987-e212871fec22?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       slug: "lifestyle"
     },
     {
       name: "Business",
-      description: "Stay updated on entrepreneurship, markets, and business strategies",
+      description: "Stay updated on productivity, entrepreneurship, and business strategies",
       image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       slug: "business"
     },
     {
       name: "Travel",
-      description: "Journey through destinations, cultures, and travel experiences",
+      description: "Journey through destinations, cultures, and adventure travel experiences",
       image: "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
       slug: "travel"
     }
@@ -45,7 +45,7 @@ const CategoryHighlights = () => {
           <Link 
             to={`/all-articles?tag=${category.slug}`} 
             key={category.slug}
-            className="group relative overflow-hidden rounded-lg h-60 hover-scale"
+            className="group relative overflow-hidden rounded-lg h-60 hover-scale shadow-md hover:shadow-xl transition-all duration-300"
             aria-label={`View ${category.name} articles`}
           >
             <div className="absolute inset-0">
