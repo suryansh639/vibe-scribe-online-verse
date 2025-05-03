@@ -4,6 +4,7 @@ import { Heart, MessageSquare, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useArticleInteractions } from "@/hooks/useArticleInteractions";
+import { slugify } from "@/lib/utils";
 
 // Types
 export interface ArticleProps {
@@ -51,6 +52,10 @@ const ArticleCard = ({
     day: "numeric"
   });
 
+  // Create slug for article URL
+  const titleSlug = slugify(title);
+  const articleUrl = `/article/${id}/${titleSlug}`;
+
   return (
     <article className="border-b border-gray-200 py-8">
       <div className="flex flex-col md:flex-row gap-6">
@@ -74,11 +79,11 @@ const ArticleCard = ({
             <span className="text-gray-500 text-xs">{readTime}</span>
           </div>
           
-          <Link to={`/article/${id}`}>
+          <a href={articleUrl} target="_blank" rel="noopener noreferrer">
             <h2 className="text-xl font-bold mb-2 hover:text-brand-orange transition-colors">
               {title}
             </h2>
-          </Link>
+          </a>
           
           <p className="text-gray-600 mb-4 line-clamp-2">
             {excerpt}
@@ -111,12 +116,12 @@ const ArticleCard = ({
                 <Heart size={18} className="mr-1" fill={isLiked ? "currentColor" : "none"} />
                 <span className="text-xs">{likesCount || likes}</span>
               </Button>
-              <Link to={`/article/${id}`}>
+              <a href={articleUrl} target="_blank" rel="noopener noreferrer">
                 <Button variant="ghost" size="sm" className="text-gray-500 hover:text-brand-orange p-1 h-auto">
                   <MessageSquare size={18} className="mr-1" />
                   <span className="text-xs">{comments}</span>
                 </Button>
-              </Link>
+              </a>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -135,13 +140,13 @@ const ArticleCard = ({
         
         {coverImage && (
           <div className="md:w-1/4">
-            <Link to={`/article/${id}`}>
+            <a href={articleUrl} target="_blank" rel="noopener noreferrer">
               <img
                 src={coverImage}
                 alt={title}
                 className="w-full h-32 md:h-24 lg:h-32 object-cover rounded"
               />
-            </Link>
+            </a>
           </div>
         )}
       </div>

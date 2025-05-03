@@ -42,9 +42,11 @@ const CategoryHighlights = () => {
       <h2 className="text-2xl font-bold mb-8 text-center">Explore Categories</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {categories.map((category) => (
-          <Link 
-            to={`/all-articles?tag=${category.slug}`} 
+          <a 
+            href={`/all-articles?tag=${category.slug}`} 
             key={category.slug}
+            target="_blank"
+            rel="noopener noreferrer"
             className="group relative overflow-hidden rounded-lg h-60 hover-scale shadow-md hover:shadow-xl transition-all duration-300"
             aria-label={`View ${category.name} articles`}
           >
@@ -59,7 +61,7 @@ const CategoryHighlights = () => {
               <h3 className="font-bold text-xl mb-1">{category.name}</h3>
               <p className="text-sm text-white/80 line-clamp-2">{category.description}</p>
             </div>
-          </Link>
+          </a>
         ))}
       </div>
     </div>

@@ -1,3 +1,4 @@
+
 import { useParams, Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +17,8 @@ import PopularTopics from "@/components/articles/PopularTopics";
 import { articles } from "@/data/mockData";
 
 const ArticleDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  // Support both URL formats: /article/id and /article/id/slug
+  const { id, slug } = useParams<{ id: string; slug?: string }>();
   const [article, setArticle] = useState<any>(null);
   const [relatedArticles, setRelatedArticles] = useState<any[]>([]);
   const [popularTags, setPopularTags] = useState<string[]>([]);

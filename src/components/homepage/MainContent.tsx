@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useAuth } from "@/contexts/AuthContext";
+import { slugify } from "@/lib/utils";
 
 // Lazy load components for better performance
 const ArticleCard = lazy(() => import("@/components/articles/ArticleCard"));
@@ -53,13 +54,18 @@ const MainContent = ({ articles, loading }: MainContentProps) => {
           >
             <div className="border border-gray-200 rounded-lg overflow-hidden h-full flex flex-col">
               {article.coverImage && (
-                <Link to={`/article/${article.id}`} className="block h-40 overflow-hidden">
+                <a 
+                  href={`/article/${article.id}/${slugify(article.title)}`} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block h-40 overflow-hidden"
+                >
                   <img 
                     src={article.coverImage} 
                     alt={article.title}
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                   />
-                </Link>
+                </a>
               )}
               <div className="p-4 flex flex-col flex-grow">
                 <div className="flex items-center gap-2 mb-2">
@@ -77,11 +83,16 @@ const MainContent = ({ articles, loading }: MainContentProps) => {
                   </Link>
                 </div>
                 
-                <Link to={`/article/${article.id}`} className="block mb-2">
+                <a 
+                  href={`/article/${article.id}/${slugify(article.title)}`}
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="block mb-2"
+                >
                   <h3 className="text-lg font-bold hover:text-brand-orange transition-colors line-clamp-2">
                     {article.title}
                   </h3>
-                </Link>
+                </a>
                 
                 <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
                   {article.excerpt}

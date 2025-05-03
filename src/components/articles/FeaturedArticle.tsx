@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Heart, MessageSquare, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ArticleProps } from "./ArticleCard";
+import { slugify } from "@/lib/utils";
 
 const FeaturedArticle = ({
   id,
@@ -22,10 +23,14 @@ const FeaturedArticle = ({
     day: "numeric"
   });
 
+  // Create slug for article URL
+  const titleSlug = slugify(title);
+  const articleUrl = `/article/${id}/${titleSlug}`;
+
   return (
     <article className="bg-gray-50 rounded-xl overflow-hidden mb-12 lg:grid lg:grid-cols-2 lg:gap-8 shadow-md hover:shadow-lg transition-shadow duration-300">
       <div className="h-64 lg:h-full relative overflow-hidden">
-        <Link to={`/article/${id}`}>
+        <a href={articleUrl} target="_blank" rel="noopener noreferrer">
           <img
             src={coverImage || "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d"}
             alt={title}
@@ -34,7 +39,7 @@ const FeaturedArticle = ({
           <div className="absolute top-4 left-4 bg-brand-orange text-white px-3 py-1 rounded-full text-xs font-semibold">
             Featured
           </div>
-        </Link>
+        </a>
       </div>
       
       <div className="p-6 lg:p-8 flex flex-col justify-center">
@@ -58,11 +63,11 @@ const FeaturedArticle = ({
           </div>
         </div>
         
-        <Link to={`/article/${id}`}>
+        <a href={articleUrl} target="_blank" rel="noopener noreferrer">
           <h2 className="text-2xl lg:text-3xl font-bold mb-3 hover:text-brand-orange transition-colors">
             {title}
           </h2>
-        </Link>
+        </a>
         
         <p className="text-gray-600 mb-5 line-clamp-3">
           {excerpt}
