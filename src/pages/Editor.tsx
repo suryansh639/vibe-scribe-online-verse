@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -78,6 +79,15 @@ const Editor = () => {
     try {
       const wordCount = content.trim().split(/\s+/).length;
       const readTime = `${Math.max(1, Math.ceil(wordCount / 200))} min read`;
+      const slug = generateSlug(title);
+      
+      console.log("Publishing article with data:", {
+        title,
+        excerpt: content.substring(0, 150) + '...',
+        author_id: user.id,
+        status: 'published',
+        published: true
+      });
 
       const { data: article, error } = await supabase
         .from('articles')
@@ -94,19 +104,22 @@ const Editor = () => {
           read_time: readTime,
           likes: 0,
           comments: 0,
-          slug: generateSlug(title)
+          slug
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
       
       toast({
         title: "Article published!",
         description: "Your article has been published successfully",
       });
       
-      navigate(`/article/${generateSlug(title)}`);
+      navigate(`/`);
     } catch (err) {
       console.error("Error publishing article:", err);
       toast({
