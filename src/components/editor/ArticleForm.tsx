@@ -1,23 +1,9 @@
 
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import ImageUploader from "./ImageUploader";
 import TagInput from "./TagInput";
-import RichTextEditor from "./RichTextEditor";
-import FormatButton from "./FormatButton";
-import { 
-  Bold, 
-  Italic, 
-  Heading1, 
-  Heading2, 
-  Heading3, 
-  Link as LinkIcon, 
-  List, 
-  ListOrdered, 
-  AlignLeft, 
-  AlignCenter, 
-  AlignRight 
-} from "lucide-react";
 
 interface ArticleFormProps {
   title: string;
@@ -95,31 +81,12 @@ const ArticleForm = ({
           onImageRemove={onCoverImageRemove}
         />
         
-        <div className="mb-2 border-b pb-2">
-          <div className="flex flex-wrap gap-2">
-            <FormatButton format="bold" icon={<Bold size={16} />} tooltip="Bold" />
-            <FormatButton format="italic" icon={<Italic size={16} />} tooltip="Italic" />
-            <div className="w-px bg-gray-200 mx-1"></div>
-            <FormatButton format="h1" icon={<Heading1 size={16} />} tooltip="Heading 1" />
-            <FormatButton format="h2" icon={<Heading2 size={16} />} tooltip="Heading 2" />
-            <FormatButton format="h3" icon={<Heading3 size={16} />} tooltip="Heading 3" />
-            <div className="w-px bg-gray-200 mx-1"></div>
-            <FormatButton format="link" icon={<LinkIcon size={16} />} tooltip="Insert Link" />
-            <div className="w-px bg-gray-200 mx-1"></div>
-            <FormatButton format="ul" icon={<List size={16} />} tooltip="Bullet List" />
-            <FormatButton format="ol" icon={<ListOrdered size={16} />} tooltip="Numbered List" />
-            <div className="w-px bg-gray-200 mx-1"></div>
-            <FormatButton format="left" icon={<AlignLeft size={16} />} tooltip="Align Left" />
-            <FormatButton format="center" icon={<AlignCenter size={16} />} tooltip="Align Center" />
-            <FormatButton format="right" icon={<AlignRight size={16} />} tooltip="Align Right" />
-          </div>
-        </div>
-        
         <div className="mb-6">
-          <RichTextEditor 
+          <Textarea
             value={content}
-            onChange={onContentChange}
+            onChange={(e) => onContentChange(e.target.value)}
             placeholder="Tell your story..."
+            className="min-h-[300px] border-none px-0 text-gray-800 placeholder:text-gray-400 focus-visible:ring-0"
           />
         </div>
         
