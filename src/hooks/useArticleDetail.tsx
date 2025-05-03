@@ -66,15 +66,28 @@ export const useArticleDetail = (id: string | undefined) => {
           
           if (mockArticle) {
             console.log("Found in mock data:", mockArticle);
-            setArticle({
-              ...mockArticle,
+            
+            // Make sure we satisfy the ArticleDetailData interface
+            const articleData: ArticleDetailData = {
+              id: mockArticle.id,
+              title: mockArticle.title,
+              content: mockArticle.content || "", // Ensure content is always provided
+              excerpt: mockArticle.excerpt,
+              coverImage: mockArticle.coverImage,
+              publishedAt: mockArticle.publishedAt,
+              readTime: mockArticle.readTime,
+              tags: mockArticle.tags,
+              likes: mockArticle.likes,
+              comments: mockArticle.comments,
               author: mockArticle.author || {
                 id: "mock-author",
                 name: "Mock Author",
                 avatar: "/placeholder.svg",
                 bio: "This is a mock author bio for demonstration purposes."
               }
-            });
+            };
+            
+            setArticle(articleData);
             
             // Set related articles from mock data
             setRelatedArticles(
@@ -100,18 +113,31 @@ export const useArticleDetail = (id: string | undefined) => {
             
             setLoading(false);
             return;
+          } else {
+            setError("Article not found");
           }
         } else if (data) {
           // Article found in Supabase
-          setArticle({
-            ...data,
+          const articleData: ArticleDetailData = {
+            id: data.id,
+            title: data.title,
+            content: data.content || "", // Ensure content is always provided
+            excerpt: data.excerpt,
+            coverImage: data.cover_image,
+            publishedAt: data.published_at || data.created_at,
+            readTime: data.read_time || "5 min read",
+            tags: data.tags,
+            likes: data.likes_count || 0,
+            comments: data.comments_count || 0,
             author: {
               id: data.author.id,
               name: data.author.full_name || data.author.username || "Anonymous",
               avatar: data.author.avatar_url,
               bio: data.author.bio
             }
-          });
+          };
+          
+          setArticle(articleData);
           
           // Fetch related articles based on tags
           if (data.tags && data.tags.length > 0) {
