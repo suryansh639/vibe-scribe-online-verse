@@ -72,7 +72,11 @@ const SignUp = () => {
         <div className="w-full max-w-md">
           <div className="text-center mb-10">
             <Link to="/">
-              <img src="/logo.png" alt="Blog Company" className="h-12 mx-auto mb-4" />
+              <img 
+                src="/lovable-uploads/3efa0f09-9113-4a2d-8a87-9d8474d73326.png" 
+                alt="Blog Company" 
+                className="h-12 mx-auto mb-4" 
+              />
             </Link>
             <h1 className="text-3xl font-bold">Create your account</h1>
             <p className="text-gray-600 mt-2">Join our community of writers and readers</p>
