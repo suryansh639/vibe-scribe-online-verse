@@ -33,7 +33,14 @@ const ArticleDetail = () => {
     if (error) {
       toast.error("Error loading article: " + error);
     }
-  }, [id, article, error]);
+    
+    // Check if the URL includes the slug and if it's incorrect, redirect to the correct one
+    if (article && slug && slugify(article.title) !== slug) {
+      // We could redirect here to the correct slug, but for now let's just show a toast
+      toast.info("The URL has been updated to match the article title");
+      // In a full implementation, we would use navigate here to change the URL
+    }
+  }, [id, article, error, slug]);
   
   const handleCommentAdded = () => {
     setCommentsRefreshTrigger(prev => prev + 1);

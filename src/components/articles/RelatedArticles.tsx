@@ -1,5 +1,6 @@
 
 import { Link } from "react-router-dom";
+import { slugify } from "@/lib/utils";
 
 interface RelatedArticle {
   id: string;
@@ -39,14 +40,14 @@ const RelatedArticles = ({ articles }: RelatedArticlesProps) => {
                 </Link>
               </div>
               
-              <Link to={`/article/${article.id}`}>
+              <Link to={`/article/${article.id}/${slugify(article.title)}`}>
                 <h4 className="font-bold mb-2 hover:text-brand-orange transition-colors">
                   {article.title}
                 </h4>
               </Link>
               
               {article.coverImage && (
-                <Link to={`/article/${article.id}`}>
+                <Link to={`/article/${article.id}/${slugify(article.title)}`}>
                   <img
                     src={article.coverImage}
                     alt={article.title}

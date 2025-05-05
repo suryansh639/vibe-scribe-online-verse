@@ -49,7 +49,70 @@ export const useArticleDetail = (id: string | undefined) => {
       try {
         console.log("Fetching article with ID:", id);
         
-        // First try to get the article from Supabase
+        // Check if the ID is a valid UUID format
+        const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+        
+        if (!isValidUUID) {
+          // If it's not a UUID, check if it's a numeric ID from mock data
+          const mockArticle = articles.find(article => article.id === id);
+          
+          if (mockArticle) {
+            console.log("Found article in mock data:", mockArticle);
+            
+            // Make sure we satisfy the ArticleDetailData interface
+            const articleData: ArticleDetailData = {
+              id: mockArticle.id,
+              title: mockArticle.title,
+              content: mockArticle.content || "", 
+              excerpt: mockArticle.excerpt,
+              coverImage: mockArticle.coverImage,
+              publishedAt: mockArticle.publishedAt,
+              readTime: mockArticle.readTime,
+              tags: mockArticle.tags,
+              likes: mockArticle.likes,
+              comments: mockArticle.comments,
+              author: mockArticle.author || {
+                id: "mock-author",
+                name: "Mock Author",
+                avatar: "/placeholder.svg",
+                bio: "This is a mock author bio for demonstration purposes."
+              }
+            };
+            
+            setArticle(articleData);
+            
+            // Set related articles from mock data
+            setRelatedArticles(
+              articles
+                .filter(article => article.id !== id)
+                .slice(0, 3)
+                .map(article => ({
+                  id: article.id,
+                  title: article.title,
+                  coverImage: article.coverImage,
+                  author: article.author || {
+                    id: "mock-author",
+                    name: "Mock Author",
+                    avatar: "/placeholder.svg"
+                  }
+                }))
+            );
+            
+            // Set popular tags from mock data
+            const allTags = articles.flatMap(article => article.tags || []);
+            const uniqueTags = [...new Set(allTags)] as string[];
+            setPopularTags(uniqueTags.slice(0, 12));
+            
+            setLoading(false);
+            return;
+          } else {
+            setError("Article not found - Invalid ID format");
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // If ID is a valid UUID, try to get the article from Supabase
         const { data, error } = await supabase
           .from("articles")
           .select(`
