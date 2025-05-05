@@ -47,6 +47,8 @@ export const useArticleDetail = (id: string | undefined) => {
       if (!id) return;
       
       try {
+        console.log("Fetching article with ID:", id);
+        
         // First try to get the article from Supabase
         const { data, error } = await supabase
           .from("articles")
@@ -56,10 +58,13 @@ export const useArticleDetail = (id: string | undefined) => {
           `)
           .eq("id", id)
           .eq("status", "published")
-          .single();
+          .maybeSingle();
           
         if (error) {
-          console.log("Supabase error or article not found, checking mock data:", error);
+          console.log("Supabase error:", error);
+          setError(error.message);
+        } else if (!data) {
+          console.log("No article found in Supabase, checking mock data");
           
           // If not found in Supabase, check mock data
           const mockArticle = articles.find(article => article.id === id);
@@ -116,8 +121,10 @@ export const useArticleDetail = (id: string | undefined) => {
           } else {
             setError("Article not found");
           }
-        } else if (data) {
+        } else {
           // Article found in Supabase
+          console.log("Article found in Supabase:", data);
+          
           const articleData: ArticleDetailData = {
             id: data.id,
             title: data.title,
@@ -141,56 +148,70 @@ export const useArticleDetail = (id: string | undefined) => {
           
           // Fetch related articles based on tags
           if (data.tags && data.tags.length > 0) {
-            const { data: relatedData } = await supabase
-              .from("articles")
-              .select(`
-                *,
-                profiles(*)
-              `)
-              .neq("id", id)
-              .eq("status", "published")
-              .overlaps("tags", data.tags)
-              .limit(3);
-              
-            if (relatedData) {
-              setRelatedArticles(relatedData.map(article => ({
-                id: article.id,
-                title: article.title,
-                coverImage: article.cover_image,
-                author: {
-                  id: article.profiles.id,
-                  name: article.profiles.full_name || article.profiles.username || "Anonymous",
-                  avatar: article.profiles.avatar_url
-                }
-              })));
+            try {
+              const { data: relatedData, error: relatedError } = await supabase
+                .from("articles")
+                .select(`
+                  id,
+                  title,
+                  cover_image,
+                  profiles!articles_author_id_fkey(id, full_name, username, avatar_url)
+                `)
+                .neq("id", id)
+                .eq("status", "published")
+                .overlaps("tags", data.tags)
+                .limit(3);
+                
+              if (relatedError) {
+                console.error("Error fetching related articles:", relatedError);
+              } else if (relatedData && relatedData.length > 0) {
+                setRelatedArticles(relatedData.map(article => ({
+                  id: article.id,
+                  title: article.title,
+                  coverImage: article.cover_image,
+                  author: {
+                    id: article.profiles?.id || "unknown",
+                    name: article.profiles?.full_name || article.profiles?.username || "Anonymous",
+                    avatar: article.profiles?.avatar_url
+                  }
+                })));
+              }
+            } catch (error) {
+              console.error("Error in related articles fetch:", error);
             }
           }
           
           // Fetch popular tags
-          const { data: tagsData } = await supabase
-            .from("articles")
-            .select("tags")
-            .eq("status", "published");
-            
-          if (tagsData) {
-            const tagCounts: Record<string, number> = {};
-            tagsData.forEach(article => {
-              if (!article.tags) return;
-              article.tags.forEach((tag: string) => {
-                tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-              });
-            });
-            
-            const sortedTags = Object.entries(tagCounts)
-              .sort((a, b) => b[1] - a[1])
-              .slice(0, 12)
-              .map(([tag]) => tag);
+          try {
+            const { data: tagsData, error: tagsError } = await supabase
+              .from("articles")
+              .select("tags")
+              .eq("status", "published");
               
-            setPopularTags(sortedTags);
+            if (tagsError) {
+              console.error("Error fetching tags:", tagsError);
+            } else if (tagsData) {
+              const tagCounts: Record<string, number> = {};
+              tagsData.forEach(article => {
+                if (!article.tags) return;
+                article.tags.forEach((tag: string) => {
+                  tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+                });
+              });
+              
+              const sortedTags = Object.entries(tagCounts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 12)
+                .map(([tag]) => tag);
+                
+              setPopularTags(sortedTags);
+            }
+          } catch (error) {
+            console.error("Error in tags fetch:", error);
           }
         }
       } catch (error) {
-        console.error("Error fetching article:", error);
+        console.error("Unexpected error fetching article:", error);
         setError("An error occurred while fetching the article");
       } finally {
         setLoading(false);

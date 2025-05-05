@@ -1,6 +1,6 @@
 
 import { useParams, Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import CommentForm from "@/components/comments/CommentForm";
 import CommentsList from "@/components/comments/CommentsList";
@@ -15,12 +15,25 @@ import ArticleNotFound from "@/components/articles/ArticleNotFound";
 import NewsletterSignup from "@/components/articles/NewsletterSignup";
 import { useArticleDetail } from "@/hooks/useArticleDetail";
 import { slugify } from "@/lib/utils";
+import { toast } from "sonner";
 
 const ArticleDetail = () => {
   // Support both URL formats: /article/id and /article/id/slug
   const { id, slug } = useParams<{ id: string; slug?: string }>();
   const [commentsRefreshTrigger, setCommentsRefreshTrigger] = useState(0);
   const { article, relatedArticles, popularTags, loading, error } = useArticleDetail(id);
+  
+  useEffect(() => {
+    // Log for debugging
+    console.log("ArticleDetail component - Article ID:", id);
+    console.log("ArticleDetail component - Article data:", article);
+    console.log("ArticleDetail component - Error:", error);
+    
+    // Show toast message if there's an error
+    if (error) {
+      toast.error("Error loading article: " + error);
+    }
+  }, [id, article, error]);
   
   const handleCommentAdded = () => {
     setCommentsRefreshTrigger(prev => prev + 1);
@@ -41,9 +54,6 @@ const ArticleDetail = () => {
       </Layout>
     );
   }
-
-  // If the slug in the URL doesn't match the expected slug from the title,
-  // we could redirect here, but for now we'll just let it render
 
   return (
     <Layout>
