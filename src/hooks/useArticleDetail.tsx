@@ -127,8 +127,8 @@ export const useArticleDetail = (id: string | undefined) => {
             publishedAt: data.published_at || data.created_at,
             readTime: data.read_time || "5 min read",
             tags: data.tags,
-            likes: data.likes_count || 0,
-            comments: data.comments_count || 0,
+            likes: data.likes || 0,
+            comments: data.comments || 0,
             author: {
               id: data.author.id,
               name: data.author.full_name || data.author.username || "Anonymous",

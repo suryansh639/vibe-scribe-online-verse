@@ -43,10 +43,8 @@ const ArticleGrid = ({ articles }: ArticleGridProps) => {
         >
           <div className="border border-gray-200 rounded-lg overflow-hidden h-full flex flex-col">
             {article.coverImage && (
-              <a 
-                href={`/article/${article.id}/${slugify(article.title)}`} 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <Link 
+                to={`/article/${article.id}/${slugify(article.title)}`}
                 className="block h-40 overflow-hidden"
               >
                 <img 
@@ -54,7 +52,7 @@ const ArticleGrid = ({ articles }: ArticleGridProps) => {
                   alt={article.title}
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                 />
-              </a>
+              </Link>
             )}
             <div className="p-4 flex flex-col flex-grow">
               <div className="flex items-center gap-2 mb-2">
@@ -72,16 +70,14 @@ const ArticleGrid = ({ articles }: ArticleGridProps) => {
                 </Link>
               </div>
               
-              <a 
-                href={`/article/${article.id}/${slugify(article.title)}`}
-                target="_blank" 
-                rel="noopener noreferrer"
+              <Link 
+                to={`/article/${article.id}/${slugify(article.title)}`}
                 className="block mb-2"
               >
                 <h3 className="text-lg font-bold hover:text-brand-orange transition-colors line-clamp-2">
                   {article.title}
                 </h3>
-              </a>
+              </Link>
               
               <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-grow">
                 {article.excerpt}

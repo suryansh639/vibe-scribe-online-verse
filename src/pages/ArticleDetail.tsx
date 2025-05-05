@@ -54,9 +54,9 @@ const ArticleDetail = () => {
             <ArticleHeader
               title={article.title}
               author={article.author}
-              publishedAt={article.publishedAt || article.published_at || article.created_at}
-              readTime={article.readTime || article.read_time || "5 min read"}
-              coverImage={article.coverImage || article.cover_image}
+              publishedAt={article.publishedAt || ""}
+              readTime={article.readTime || "5 min read"}
+              coverImage={article.coverImage}
             />
             
             <ArticleContent

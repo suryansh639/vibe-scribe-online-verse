@@ -18,7 +18,14 @@ import NotFound from "./pages/NotFound";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 1,
+    },
+  },
+});
 
 // Dummy article data for seeding the database
 const dummyArticles = [
