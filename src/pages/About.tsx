@@ -25,7 +25,7 @@ const About = () => {
         </p>
       </section>
 
-      <section className="mb-12">
+      <section>
         <h2 className="text-2xl font-semibold mb-4 text-gray-800">Our Values</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-gray-50 p-6 rounded-lg">
@@ -39,32 +39,6 @@ const About = () => {
           <div className="bg-gray-50 p-6 rounded-lg">
             <h3 className="font-semibold mb-2 text-lg">Diversity</h3>
             <p>We amplify diverse voices and perspectives, believing that the best ideas emerge from a chorus of different viewpoints.</p>
-          </div>
-        </div>
-      </section>
-
-      <section>
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">Our Team</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="text-center">
-            <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4"></div>
-            <h3 className="font-semibold">Alex Johnson</h3>
-            <p className="text-gray-600">CEO & Founder</p>
-          </div>
-          <div className="text-center">
-            <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4"></div>
-            <h3 className="font-semibold">Maria Rodriguez</h3>
-            <p className="text-gray-600">Editor-in-Chief</p>
-          </div>
-          <div className="text-center">
-            <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4"></div>
-            <h3 className="font-semibold">David Chen</h3>
-            <p className="text-gray-600">Head of Technology</p>
-          </div>
-          <div className="text-center">
-            <div className="w-32 h-32 rounded-full bg-gray-200 mx-auto mb-4"></div>
-            <h3 className="font-semibold">Sarah Patel</h3>
-            <p className="text-gray-600">Marketing Director</p>
           </div>
         </div>
       </section>
