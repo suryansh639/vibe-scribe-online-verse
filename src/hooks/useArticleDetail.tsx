@@ -34,60 +34,50 @@ export const useArticleDetail = (id: string | undefined): UseArticleDetailResult
       
       console.log("Attempting to fetch article with ID:", id);
       
-      try {
-        // Try mock data first for any ID format
-        const mockResult = useMockArticle(id);
+      // First, try to get the article from mock data
+      const mockResult = useMockArticle(id);
+      
+      if (mockResult.article) {
+        console.log("Successfully found article in mock data:", mockResult.article.title);
+        setResult({
+          article: mockResult.article,
+          relatedArticles: mockResult.relatedArticles || [],
+          popularTags: mockResult.popularTags || [],
+          loading: false,
+          error: null
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // If not found in mock data and it's a valid UUID, try Supabase
+      if (isValidUUID(id)) {
+        console.log("Article not found in mock data, trying Supabase");
+        const supabaseResult = useSupabaseArticle(id);
         
-        if (mockResult.article) {
-          console.log("Found article in mock data:", mockResult.article.title);
+        if (supabaseResult.article) {
+          console.log("Found article in Supabase");
           setResult({
-            article: mockResult.article,
-            relatedArticles: mockResult.relatedArticles || [],
-            popularTags: mockResult.popularTags || [],
+            article: supabaseResult.article,
+            relatedArticles: supabaseResult.relatedArticles || [],
+            popularTags: supabaseResult.popularTags || [],
             loading: false,
             error: null
           });
-          setLoading(false);
-          return;
-        }
-        
-        // If not found in mock data and it's a valid UUID, try Supabase
-        const validUUID = isValidUUID(id);
-        if (validUUID) {
-          const supabaseResult = useSupabaseArticle(id);
-          
-          if (supabaseResult.article) {
-            console.log("Found article in Supabase:", supabaseResult.article.title);
-            setResult({
-              article: supabaseResult.article,
-              relatedArticles: supabaseResult.relatedArticles || [],
-              popularTags: supabaseResult.popularTags || [],
-              loading: false,
-              error: null
-            });
-            setLoading(false);
-            return;
-          }
-          
-          // Not found in Supabase either
-          if (supabaseResult.error) {
-            console.error("Supabase error:", supabaseResult.error);
-            setResult({
-              article: null,
-              relatedArticles: [],
-              popularTags: [],
-              loading: false,
-              error: supabaseResult.error
-            });
-            setLoading(false);
-            return;
-          }
         } else {
-          console.warn("Invalid UUID format:", id);
+          // Not found in Supabase either
+          console.error("Article not found in any data source");
+          setResult({
+            article: null,
+            relatedArticles: [],
+            popularTags: [],
+            loading: false,
+            error: supabaseResult.error || "Article not found"
+          });
         }
-        
-        // If we reach here, the article was not found in either source
-        console.error("Article not found in any data source");
+      } else {
+        // Not a valid UUID, and not found in mock data
+        console.error("Article not found in mock data and ID is not a valid UUID");
         setResult({
           article: null,
           relatedArticles: [],
@@ -95,18 +85,9 @@ export const useArticleDetail = (id: string | undefined): UseArticleDetailResult
           loading: false,
           error: "Article not found"
         });
-        setLoading(false);
-      } catch (error) {
-        console.error("Unexpected error fetching article:", error);
-        setResult({
-          article: null,
-          relatedArticles: [],
-          popularTags: [],
-          loading: false,
-          error: "An error occurred while fetching the article"
-        });
-        setLoading(false);
       }
+      
+      setLoading(false);
     };
     
     fetchArticle();

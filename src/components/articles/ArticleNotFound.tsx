@@ -20,9 +20,11 @@ const ArticleNotFound = ({ error }: ArticleNotFoundProps) => {
         <AlertTitle className="text-xl font-bold text-red-700 mb-2">Article Not Found</AlertTitle>
         <AlertDescription className="text-gray-700">
           {error || "The article you're looking for doesn't exist or has been removed."}
-          {error && error.includes("invalid input syntax") && (
+          
+          {/* Show additional help text if there's a specific error */}
+          {error && error.includes("mock data") && (
             <div className="mt-2 text-sm">
-              There seems to be an issue with the article ID format. Please try accessing the article from the home page.
+              Try accessing articles from the home page or all articles section.
             </div>
           )}
         </AlertDescription>
@@ -36,14 +38,15 @@ const ArticleNotFound = ({ error }: ArticleNotFoundProps) => {
           </Button>
         </Link>
         
-        <Button 
-          variant="outline" 
-          onClick={() => window.history.back()} 
-          className="flex gap-2 items-center"
-        >
-          <ArrowLeft size={18} />
-          Go Back
-        </Button>
+        <Link to="/all-articles">
+          <Button 
+            variant="outline" 
+            className="w-full flex gap-2 items-center"
+          >
+            <ArrowLeft size={18} />
+            Browse All Articles
+          </Button>
+        </Link>
         
         <Button 
           variant="outline" 

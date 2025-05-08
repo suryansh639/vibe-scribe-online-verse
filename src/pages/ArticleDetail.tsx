@@ -18,35 +18,38 @@ import { useArticleDetail } from "@/hooks/useArticleDetail";
 import { slugify } from "@/lib/utils";
 
 const ArticleDetail = () => {
-  // Support both URL formats: /article/id and /article/id/slug
   const { id, slug } = useParams<{ id: string; slug?: string }>();
   const navigate = useNavigate();
   const [commentsRefreshTrigger, setCommentsRefreshTrigger] = useState(0);
+  
+  // Use the hook to fetch article data
   const { article, relatedArticles, popularTags, loading, error } = useArticleDetail(id);
   
   useEffect(() => {
     // Log for debugging
     console.log("ArticleDetail component - Article ID:", id);
-    console.log("ArticleDetail component - Article loaded:", article ? "Yes" : "No");
     
-    // Show toast message if there's an error
-    if (error) {
+    if (article) {
+      console.log("Article loaded successfully:", article.title);
+      document.title = `${article.title} | Blog`;
+      
+      // Check if the URL includes the slug and if it's incorrect, redirect to the correct one
+      if (slug && slugify(article.title) !== slug) {
+        const correctSlug = slugify(article.title);
+        navigate(`/article/${id}/${correctSlug}`, { replace: true });
+      }
+    } else if (error && !loading) {
+      console.error("Error loading article:", error);
       toast.error("Error loading article: " + error);
     }
-    
-    // Check if the URL includes the slug and if it's incorrect, redirect to the correct one
-    if (article && slug && slugify(article.title) !== slug) {
-      const correctSlug = slugify(article.title);
-      navigate(`/article/${id}/${correctSlug}`, { replace: true });
-      toast.info("The URL has been updated to match the article title");
-    }
-  }, [id, article, error, slug, navigate]);
+  }, [id, article, error, slug, navigate, loading]);
   
   const handleCommentAdded = () => {
     setCommentsRefreshTrigger(prev => prev + 1);
     toast.success("Comment added successfully!");
   };
   
+  // Show loading state while fetching
   if (loading) {
     return (
       <Layout>
@@ -55,6 +58,7 @@ const ArticleDetail = () => {
     );
   }
   
+  // If no article was found, show the not found component
   if (error || !article) {
     return (
       <Layout>
