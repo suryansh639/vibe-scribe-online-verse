@@ -5,7 +5,8 @@ import { useSupabaseArticle } from "./useSupabaseArticle";
 import { useMockArticle } from "./useMockArticle";
 import { UseArticleDetailResult } from "./types/articleTypes";
 
-export { ArticleAuthor, RelatedArticle, ArticleDetailData } from "./types/articleTypes";
+// Change to use 'export type' syntax for TypeScript types
+export type { ArticleAuthor, RelatedArticle, ArticleDetailData } from "./types/articleTypes";
 
 export const useArticleDetail = (id: string | undefined): UseArticleDetailResult => {
   const [loading, setLoading] = useState(true);
