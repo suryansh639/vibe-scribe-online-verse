@@ -5,7 +5,7 @@ import { useSupabaseArticle } from "./useSupabaseArticle";
 import { useMockArticle } from "./useMockArticle";
 import { UseArticleDetailResult } from "./types/articleTypes";
 
-// Change to use 'export type' syntax for TypeScript types
+// Export types directly from the types file
 export type { ArticleAuthor, RelatedArticle, ArticleDetailData } from "./types/articleTypes";
 
 export const useArticleDetail = (id: string | undefined): UseArticleDetailResult => {
@@ -32,35 +32,18 @@ export const useArticleDetail = (id: string | undefined): UseArticleDetailResult
         return;
       }
       
-      console.log("Fetching article with ID:", id);
+      console.log("Attempting to fetch article with ID:", id);
       
       try {
-        // Check if the ID is a valid UUID format for Supabase
-        const validUUID = isValidUUID(id);
+        // Try mock data first for any ID format
+        const mockResult = useMockArticle(id);
         
-        if (!validUUID) {
-          // If it's not a UUID, try to get from mock data
-          const { article, relatedArticles, popularTags, error } = useMockArticle(id);
-          
+        if (mockResult.article) {
+          console.log("Found article in mock data:", mockResult.article.title);
           setResult({
-            article,
-            relatedArticles: relatedArticles || [],
-            popularTags: popularTags || [],
-            loading: false,
-            error: article ? null : (error || "Article not found - Invalid ID format")
-          });
-          setLoading(false);
-          return;
-        }
-        
-        // If it's a valid UUID, try to get from Supabase
-        const { article, relatedArticles, popularTags, error } = useSupabaseArticle(id);
-        
-        if (article) {
-          setResult({
-            article,
-            relatedArticles: relatedArticles || [],
-            popularTags: popularTags || [],
+            article: mockResult.article,
+            relatedArticles: mockResult.relatedArticles || [],
+            popularTags: mockResult.popularTags || [],
             loading: false,
             error: null
           });
@@ -68,19 +51,51 @@ export const useArticleDetail = (id: string | undefined): UseArticleDetailResult
           return;
         }
         
-        // If not found in Supabase, try mock data as fallback
-        if (error) {
-          const mockResult = useMockArticle(id);
+        // If not found in mock data and it's a valid UUID, try Supabase
+        const validUUID = isValidUUID(id);
+        if (validUUID) {
+          const supabaseResult = useSupabaseArticle(id);
           
-          setResult({
-            article: mockResult.article,
-            relatedArticles: mockResult.relatedArticles || [],
-            popularTags: mockResult.popularTags || [],
-            loading: false,
-            error: mockResult.article ? null : (mockResult.error || "Article not found")
-          });
-          setLoading(false);
+          if (supabaseResult.article) {
+            console.log("Found article in Supabase:", supabaseResult.article.title);
+            setResult({
+              article: supabaseResult.article,
+              relatedArticles: supabaseResult.relatedArticles || [],
+              popularTags: supabaseResult.popularTags || [],
+              loading: false,
+              error: null
+            });
+            setLoading(false);
+            return;
+          }
+          
+          // Not found in Supabase either
+          if (supabaseResult.error) {
+            console.error("Supabase error:", supabaseResult.error);
+            setResult({
+              article: null,
+              relatedArticles: [],
+              popularTags: [],
+              loading: false,
+              error: supabaseResult.error
+            });
+            setLoading(false);
+            return;
+          }
+        } else {
+          console.warn("Invalid UUID format:", id);
         }
+        
+        // If we reach here, the article was not found in either source
+        console.error("Article not found in any data source");
+        setResult({
+          article: null,
+          relatedArticles: [],
+          popularTags: [],
+          loading: false,
+          error: "Article not found"
+        });
+        setLoading(false);
       } catch (error) {
         console.error("Unexpected error fetching article:", error);
         setResult({

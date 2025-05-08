@@ -1,39 +1,45 @@
 
-import { useState, useEffect } from "react";
+import { articles } from "@/data/mockData";
 import { findMockArticleById, getRelatedArticlesFromMock, getPopularTagsFromMock } from "@/utils/articleUtils";
 import { ArticleDetailData, RelatedArticle } from "./types/articleTypes";
 
 export const useMockArticle = (id: string) => {
-  const [article, setArticle] = useState<ArticleDetailData | null>(null);
-  const [relatedArticles, setRelatedArticles] = useState<RelatedArticle[]>([]);
-  const [popularTags, setPopularTags] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  console.log("Fetching mock article with ID:", id);
   
-  useEffect(() => {
-    const fetchFromMockData = () => {
-      console.log("Fetching from mock data for ID:", id);
-      
-      const mockArticle = findMockArticleById(id);
-      
-      if (mockArticle) {
-        console.log("Found in mock data:", mockArticle);
-        setArticle(mockArticle);
-        
-        // Set related articles from mock data
-        setRelatedArticles(getRelatedArticlesFromMock(id));
-        
-        // Set popular tags from mock data
-        setPopularTags(getPopularTagsFromMock());
-        
-        return true;
-      } else {
-        setError("Article not found in mock data");
-        return false;
-      }
+  try {
+    const article = findMockArticleById(id);
+    
+    if (!article) {
+      console.log("Mock article not found for ID:", id);
+      return { 
+        article: null, 
+        relatedArticles: [], 
+        popularTags: [], 
+        error: "Article not found in mock data" 
+      };
+    }
+    
+    console.log("Found mock article:", article.title);
+    
+    // Get related articles
+    const relatedArticles = getRelatedArticlesFromMock(id);
+    
+    // Get popular tags
+    const popularTags = getPopularTagsFromMock();
+    
+    return {
+      article,
+      relatedArticles,
+      popularTags,
+      error: null
     };
-
-    fetchFromMockData();
-  }, [id]);
-
-  return { article, relatedArticles, popularTags, error };
+  } catch (error) {
+    console.error("Error in useMockArticle:", error);
+    return {
+      article: null,
+      relatedArticles: [],
+      popularTags: [],
+      error: "An error occurred while fetching the article from mock data"
+    };
+  }
 };

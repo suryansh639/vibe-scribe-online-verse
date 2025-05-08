@@ -1,6 +1,7 @@
 
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import Layout from "@/components/layout/Layout";
 import CommentForm from "@/components/comments/CommentForm";
 import CommentsList from "@/components/comments/CommentsList";
@@ -15,19 +16,18 @@ import ArticleNotFound from "@/components/articles/ArticleNotFound";
 import NewsletterSignup from "@/components/articles/NewsletterSignup";
 import { useArticleDetail } from "@/hooks/useArticleDetail";
 import { slugify } from "@/lib/utils";
-import { toast } from "sonner";
 
 const ArticleDetail = () => {
   // Support both URL formats: /article/id and /article/id/slug
   const { id, slug } = useParams<{ id: string; slug?: string }>();
+  const navigate = useNavigate();
   const [commentsRefreshTrigger, setCommentsRefreshTrigger] = useState(0);
   const { article, relatedArticles, popularTags, loading, error } = useArticleDetail(id);
   
   useEffect(() => {
     // Log for debugging
     console.log("ArticleDetail component - Article ID:", id);
-    console.log("ArticleDetail component - Article data:", article);
-    console.log("ArticleDetail component - Error:", error);
+    console.log("ArticleDetail component - Article loaded:", article ? "Yes" : "No");
     
     // Show toast message if there's an error
     if (error) {
@@ -36,14 +36,15 @@ const ArticleDetail = () => {
     
     // Check if the URL includes the slug and if it's incorrect, redirect to the correct one
     if (article && slug && slugify(article.title) !== slug) {
-      // We could redirect here to the correct slug, but for now let's just show a toast
+      const correctSlug = slugify(article.title);
+      navigate(`/article/${id}/${correctSlug}`, { replace: true });
       toast.info("The URL has been updated to match the article title");
-      // In a full implementation, we would use navigate here to change the URL
     }
-  }, [id, article, error, slug]);
+  }, [id, article, error, slug, navigate]);
   
   const handleCommentAdded = () => {
     setCommentsRefreshTrigger(prev => prev + 1);
+    toast.success("Comment added successfully!");
   };
   
   if (loading) {
