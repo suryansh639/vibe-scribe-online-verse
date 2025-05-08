@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -15,6 +16,15 @@ import EditProfile from "./pages/EditProfile";
 import AllArticles from "./pages/AllArticles";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
+import About from "./pages/About";
+import Careers from "./pages/Careers";
+import Contact from "./pages/Contact";
+import HelpCenter from "./pages/HelpCenter";
+import WritingGuidelines from "./pages/WritingGuidelines";
+import Community from "./pages/Community";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
+import Cookies from "./pages/Cookies";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -216,6 +226,21 @@ const App = () => {
               <Route path="/signin" element={<SignIn />} />
               <Route path="/signup" element={<SignUp />} />
               <Route path="/all-articles" element={<AllArticles />} />
+              
+              {/* Company pages */}
+              <Route path="/about" element={<About />} />
+              <Route path="/careers" element={<Careers />} />
+              <Route path="/contact" element={<Contact />} />
+              
+              {/* Resources pages */}
+              <Route path="/help" element={<HelpCenter />} />
+              <Route path="/guidelines" element={<WritingGuidelines />} />
+              <Route path="/community" element={<Community />} />
+              
+              {/* Legal pages */}
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/cookies" element={<Cookies />} />
               
               {/* Protected routes */}
               <Route path="/dashboard" element={<Dashboard />} />
