@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from "react";
 import { isValidUUID } from "@/utils/articleUtils";
-import { useSupabaseArticle } from "./useSupabaseArticle";
 import { useMockArticle } from "./useMockArticle";
+import { useSupabaseArticle } from "./useSupabaseArticle";
 import { UseArticleDetailResult } from "./types/articleTypes";
+import { articles } from "@/data/mockData";
 
 // Export types directly from the types file
 export type { ArticleAuthor, RelatedArticle, ArticleDetailData } from "./types/articleTypes";
@@ -46,6 +47,55 @@ export const useArticleDetail = (id: string | undefined): UseArticleDetailResult
           loading: false,
           error: null
         });
+        setLoading(false);
+        return;
+      }
+      
+      console.log("Article not found in mock data, searching by ID directly in articles array");
+      
+      // Try to find the article directly in the articles array (fallback)
+      const directArticle = articles.find(article => article.id === id);
+      
+      if (directArticle) {
+        console.log("Found article directly in articles array:", directArticle.title);
+        
+        setResult({
+          article: {
+            id: directArticle.id,
+            title: directArticle.title,
+            content: directArticle.content || "",
+            excerpt: directArticle.excerpt,
+            coverImage: directArticle.coverImage,
+            publishedAt: directArticle.publishedAt,
+            readTime: directArticle.readTime,
+            tags: directArticle.tags,
+            likes: directArticle.likes,
+            comments: directArticle.comments,
+            author: directArticle.author || {
+              id: "mock-author",
+              name: "Mock Author",
+              avatar: "/placeholder.svg",
+              bio: "This is a mock author bio for demonstration purposes."
+            }
+          },
+          relatedArticles: articles
+            .filter(a => a.id !== id)
+            .slice(0, 3)
+            .map(a => ({
+              id: a.id,
+              title: a.title,
+              coverImage: a.coverImage,
+              author: a.author || {
+                id: "mock-author",
+                name: "Mock Author",
+                avatar: "/placeholder.svg"
+              }
+            })),
+          popularTags: [...new Set(articles.flatMap(a => a.tags || []))].slice(0, 12),
+          loading: false,
+          error: null
+        });
+        
         setLoading(false);
         return;
       }
