@@ -84,8 +84,8 @@ const ArticlesList = ({
             publishedAt={article.publishedAt}
             readTime={article.readTime}
             tags={article.tags}
-            likes={article.likes || 0}
-            comments={article.comments || 0}
+            likes={article.likes}
+            comments={article.comments}
           />
         </Suspense>
       ))}

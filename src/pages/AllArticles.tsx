@@ -6,11 +6,11 @@ import { supabase } from "@/integrations/supabase/client";
 import PopularTopicsSidebar from "@/components/articles/PopularTopicsSidebar";
 import ArticleSearchBar from "@/components/articles/ArticleSearchBar";
 import ArticlesList from "@/components/articles/ArticlesList";
-import { ArticleListItem } from "@/components/articles/ArticleCard";
+import { ArticleDetailData } from "@/hooks/types/articleTypes";
 
 const AllArticles = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [articles, setArticles] = useState<ArticleListItem[]>([]);
+  const [articles, setArticles] = useState<ArticleDetailData[]>([]);
   const [popularTags, setPopularTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -71,21 +71,23 @@ const AllArticles = () => {
         return;
       }
 
-      const formattedArticles: ArticleListItem[] = articlesData.map(article => ({
+      const formattedArticles: ArticleDetailData[] = articlesData.map(article => ({
         id: article.id,
         title: article.title,
         excerpt: article.excerpt || "",
-        coverImage: article.cover_image,
+        content: "", // Add required content field (empty string as default)
+        coverImage: article.cover_image || "",
         author: {
           id: article.profiles.id,
           name: article.profiles.full_name || article.profiles.username || "Anonymous",
-          avatar: article.profiles.avatar_url
+          avatar: article.profiles.avatar_url || ""
         },
         publishedAt: article.published_at || article.created_at,
         readTime: article.read_time || "5 min read",
         tags: article.tags || [],
         likes: article.likes || 0,
-        comments: article.comments || 0
+        comments: article.comments || 0,
+        featured: false // Add required featured field (default to false)
       }));
 
       setArticles(formattedArticles);
