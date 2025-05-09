@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { isValidUUID } from "@/utils/articleUtils";
 import { useMockArticle } from "./useMockArticle";
@@ -66,11 +67,11 @@ export const useArticleDetail = (id: string | undefined): UseArticleDetailResult
             excerpt: directArticle.excerpt || directArticle.content?.substring(0, 150) + "..." || "",
             coverImage: directArticle.coverImage || "/placeholder.svg",
             publishedAt: directArticle.publishedAt || new Date().toISOString(),
-            readTime: directArticle.readTime || "5 min read", // Ensure readTime always has a value
-            tags: directArticle.tags || [],
+            readTime: directArticle.readTime || "5 min read",
+            tags: directArticle.tags || [], // Ensure tags always has a value (empty array if undefined)
             likes: directArticle.likes || 0,
             comments: directArticle.comments || 0,
-            featured: directArticle.featured || false, // Ensure featured is provided
+            featured: directArticle.featured || false,
             author: directArticle.author || {
               id: "mock-author",
               name: "Mock Author",

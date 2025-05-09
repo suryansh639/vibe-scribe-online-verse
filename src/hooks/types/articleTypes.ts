@@ -24,8 +24,8 @@ export interface ArticleDetailData {
   excerpt: string;  // Required
   coverImage: string;  // Required
   publishedAt: string;  // Required
-  readTime: string;  // Changed from optional to required
-  tags?: string[];
+  readTime: string;  // Required
+  tags: string[];  // Changed from optional to required
   likes?: number;
   comments?: number;
   featured: boolean;  // Required

@@ -24,13 +24,13 @@ export const findMockArticleById = (id: string): ArticleDetailData | null => {
     title: mockArticle.title,
     content: mockArticle.content || "",
     excerpt: mockArticle.excerpt || mockArticle.content?.substring(0, 150) + "..." || "", 
-    coverImage: mockArticle.coverImage || "/placeholder.svg", // Provide default value
-    publishedAt: mockArticle.publishedAt || new Date().toISOString(), // Provide default value
-    readTime: mockArticle.readTime || "5 min read", // Ensure readTime always has a value
-    tags: mockArticle.tags || [],
+    coverImage: mockArticle.coverImage || "/placeholder.svg",
+    publishedAt: mockArticle.publishedAt || new Date().toISOString(),
+    readTime: mockArticle.readTime || "5 min read",
+    tags: mockArticle.tags || [], // Ensure tags always has a value (empty array if undefined)
     likes: mockArticle.likes || 0,
     comments: mockArticle.comments || 0,
-    featured: mockArticle.featured || false, // Ensure featured always has a value
+    featured: mockArticle.featured || false,
     author: mockArticle.author || {
       id: "mock-author",
       name: "Mock Author",

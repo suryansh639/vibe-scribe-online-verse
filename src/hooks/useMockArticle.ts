@@ -38,13 +38,13 @@ export const useMockArticle = (id: string) => {
     title: article.title,
     content: article.content || "",
     excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
-    coverImage: article.coverImage || "/placeholder.svg", // Provide default value
-    publishedAt: article.publishedAt || new Date().toISOString(), // Provide default value
-    readTime: article.readTime || "5 min read", // Ensure readTime always has a value
-    tags: article.tags || [],
+    coverImage: article.coverImage || "/placeholder.svg",
+    publishedAt: article.publishedAt || new Date().toISOString(),
+    readTime: article.readTime || "5 min read",
+    tags: article.tags || [], // Ensure tags always has a value (empty array if undefined)
     likes: article.likes || 0,
     comments: article.comments || 0,
-    featured: article.featured || false, // Ensure featured always has a value
+    featured: article.featured || false,
     author: article.author || {
       id: "mock-author",
       name: "Mock Author",
