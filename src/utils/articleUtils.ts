@@ -26,7 +26,7 @@ export const findMockArticleById = (id: string): ArticleDetailData | null => {
     excerpt: mockArticle.excerpt || mockArticle.content?.substring(0, 150) + "..." || "", 
     coverImage: mockArticle.coverImage || "/placeholder.svg", // Provide default value
     publishedAt: mockArticle.publishedAt || new Date().toISOString(), // Provide default value
-    readTime: mockArticle.readTime || "5 min read",
+    readTime: mockArticle.readTime || "5 min read", // Ensure readTime always has a value
     tags: mockArticle.tags || [],
     likes: mockArticle.likes || 0,
     comments: mockArticle.comments || 0,

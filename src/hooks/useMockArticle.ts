@@ -40,7 +40,7 @@ export const useMockArticle = (id: string) => {
     excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
     coverImage: article.coverImage || "/placeholder.svg", // Provide default value
     publishedAt: article.publishedAt || new Date().toISOString(), // Provide default value
-    readTime: article.readTime || "5 min read",
+    readTime: article.readTime || "5 min read", // Ensure readTime always has a value
     tags: article.tags || [],
     likes: article.likes || 0,
     comments: article.comments || 0,

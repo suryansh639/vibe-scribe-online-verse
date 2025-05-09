@@ -23,8 +23,8 @@ export interface ArticleDetailData {
   content: string;
   excerpt: string;  // Required
   coverImage: string;  // Required
-  publishedAt: string;  // Changed from optional to required
-  readTime?: string;
+  publishedAt: string;  // Required
+  readTime: string;  // Changed from optional to required
   tags?: string[];
   likes?: number;
   comments?: number;
