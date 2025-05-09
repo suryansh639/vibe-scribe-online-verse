@@ -24,8 +24,8 @@ const HomePage = () => {
     return () => clearTimeout(timer);
   }, []);
   
-  // Get the featured article
-  const featuredArticle = articles.find(article => article.featured);
+  // Get the featured article - either look for one explicitly marked as featured or use the first one
+  const featuredArticle = articles.find(article => article.featured) || articles[0];
 
   return (
     <Layout>
