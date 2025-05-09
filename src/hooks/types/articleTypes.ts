@@ -26,8 +26,8 @@ export interface ArticleDetailData {
   publishedAt: string;  // Required
   readTime: string;  // Required
   tags: string[];  // Changed from optional to required
-  likes: number;  // Changed from optional to required
-  comments: number;  // Changed from optional to required
+  likes?: number;
+  comments?: number;
   featured: boolean;  // Required
   author: ArticleAuthor;
 }
