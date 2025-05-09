@@ -22,13 +22,13 @@ export interface ArticleDetailData {
   title: string;
   content: string;
   excerpt: string;  // Changed from optional to required
-  coverImage?: string;
+  coverImage: string;  // Changed from optional to required
   publishedAt?: string;
   readTime?: string;
   tags?: string[];
   likes?: number;
   comments?: number;
-  featured?: boolean;
+  featured: boolean;  // Ensuring featured is required
   author: ArticleAuthor;
 }
 

@@ -37,14 +37,14 @@ export const useMockArticle = (id: string) => {
     id: article.id,
     title: article.title,
     content: article.content || "",
-    excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "", // Ensure excerpt is always defined
-    coverImage: article.coverImage,
+    excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
+    coverImage: article.coverImage || "/placeholder.svg", // Provide default value
     publishedAt: article.publishedAt,
     readTime: article.readTime,
     tags: article.tags,
     likes: article.likes,
     comments: article.comments,
-    featured: article.featured,
+    featured: article.featured || false, // Ensure featured always has a value
     author: article.author
   };
   
