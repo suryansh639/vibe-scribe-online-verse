@@ -4,30 +4,13 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useAuth } from "@/contexts/AuthContext";
+import { ArticleDetailData } from "@/hooks/types/articleTypes";
 
 // Lazy load components for better performance
 const FeaturedArticle = lazy(() => import("@/components/articles/FeaturedArticle"));
 
-interface Article {
-  id: string;
-  title: string;
-  excerpt: string;
-  coverImage?: string;
-  featured?: boolean;
-  author: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  publishedAt: string;
-  readTime: string;
-  tags: string[];
-  likes: number;
-  comments: number;
-}
-
 interface FeaturedArticleSectionProps {
-  article: Article | undefined;
+  article: ArticleDetailData | undefined;
   loading: boolean;
 }
 

@@ -10,6 +10,7 @@ import TestimonialsSection from "@/components/homepage/TestimonialsSection";
 import MainContent from "@/components/homepage/MainContent";
 import Sidebar from "@/components/homepage/Sidebar";
 import FeaturedArticleSection from "@/components/homepage/FeaturedArticleSection";
+import { ArticleDetailData } from "@/hooks/types/articleTypes";
 
 const HomePage = () => {
   const { toast } = useToast();

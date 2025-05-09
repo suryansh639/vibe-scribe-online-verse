@@ -3,27 +3,10 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import ArticleGrid from "./ArticleGrid";
 import ArticleTabs from "./ArticleTabs";
-
-interface Article {
-  id: string;
-  title: string;
-  excerpt: string;
-  coverImage?: string;
-  featured?: boolean;
-  author: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  publishedAt: string;
-  readTime: string;
-  tags: string[];
-  likes: number;
-  comments: number;
-}
+import { ArticleDetailData } from "@/hooks/types/articleTypes";
 
 interface MainContentProps {
-  articles: Article[];
+  articles: ArticleDetailData[];
   loading: boolean;
 }
 

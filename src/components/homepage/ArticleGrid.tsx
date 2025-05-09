@@ -3,30 +3,13 @@ import { Suspense, lazy } from "react";
 import { Link } from "react-router-dom";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { slugify } from "@/lib/utils";
+import { ArticleDetailData } from "@/hooks/types/articleTypes";
 
 // Lazy load components for better performance
 const ArticleCard = lazy(() => import("@/components/articles/ArticleCard"));
 
-interface Article {
-  id: string;
-  title: string;
-  excerpt: string;
-  coverImage?: string;
-  featured?: boolean;
-  author: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  publishedAt: string;
-  readTime: string;
-  tags: string[];
-  likes: number;
-  comments: number;
-}
-
 interface ArticleGridProps {
-  articles: Article[];
+  articles: ArticleDetailData[];
 }
 
 const ArticleGrid = ({ articles }: ArticleGridProps) => {

@@ -5,30 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { useAuth } from "@/contexts/AuthContext";
+import { ArticleDetailData } from "@/hooks/types/articleTypes";
 
 // Lazy load components for better performance
 const ArticleCard = lazy(() => import("@/components/articles/ArticleCard"));
 
-interface Article {
-  id: string;
-  title: string;
-  excerpt: string;
-  coverImage?: string;
-  featured?: boolean;
-  author: {
-    id: string;
-    name: string;
-    avatar?: string;
-  };
-  publishedAt: string;
-  readTime: string;
-  tags: string[];
-  likes: number;
-  comments: number;
-}
-
 interface ArticleTabsProps {
-  articles: Article[];
+  articles: ArticleDetailData[];
   loading: boolean;
 }
 

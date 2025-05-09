@@ -3,31 +3,13 @@ import { Suspense, lazy } from "react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { ArticleDetailData } from "@/hooks/types/articleTypes";
 
 // Lazy load ArticleCard for better performance
 const ArticleCard = lazy(() => import("@/components/articles/ArticleCard"));
 
-interface AuthorInfo {
-  id: string;
-  name: string;
-  avatar?: string;
-}
-
-export interface ArticleListItem {
-  id: string;
-  title: string;
-  excerpt: string;
-  coverImage?: string;
-  author: AuthorInfo;
-  publishedAt: string;
-  readTime: string;
-  tags: string[];
-  likes: number;
-  comments: number;
-}
-
 interface ArticlesListProps {
-  articles: ArticleListItem[];
+  articles: ArticleDetailData[];
   loading: boolean;
   tagFilter?: string | null;
   searchFilter?: string | null;
