@@ -23,13 +23,14 @@ export const findMockArticleById = (id: string): ArticleDetailData | null => {
     id: mockArticle.id,
     title: mockArticle.title,
     content: mockArticle.content || "",
-    excerpt: mockArticle.excerpt,
+    excerpt: mockArticle.excerpt || mockArticle.content?.substring(0, 150) + "..." || "", // Ensure excerpt is always defined
     coverImage: mockArticle.coverImage,
     publishedAt: mockArticle.publishedAt,
     readTime: mockArticle.readTime,
     tags: mockArticle.tags,
     likes: mockArticle.likes,
     comments: mockArticle.comments,
+    featured: mockArticle.featured,
     author: mockArticle.author || {
       id: "mock-author",
       name: "Mock Author",

@@ -21,7 +21,7 @@ export interface ArticleDetailData {
   id: string;
   title: string;
   content: string;
-  excerpt?: string;
+  excerpt: string;  // Changed from optional to required
   coverImage?: string;
   publishedAt?: string;
   readTime?: string;

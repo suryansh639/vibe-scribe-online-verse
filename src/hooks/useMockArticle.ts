@@ -32,8 +32,24 @@ export const useMockArticle = (id: string) => {
   // Get popular tags
   const popularTags = getPopularTagsFromMock();
   
+  // Ensure the article has all required properties
+  const completeArticle: ArticleDetailData = {
+    id: article.id,
+    title: article.title,
+    content: article.content || "",
+    excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "", // Ensure excerpt is always defined
+    coverImage: article.coverImage,
+    publishedAt: article.publishedAt,
+    readTime: article.readTime,
+    tags: article.tags,
+    likes: article.likes,
+    comments: article.comments,
+    featured: article.featured,
+    author: article.author
+  };
+  
   return {
-    article,
+    article: completeArticle,
     relatedArticles,
     popularTags,
     error: null
