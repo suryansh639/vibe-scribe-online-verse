@@ -28,6 +28,7 @@ export interface ArticleDetailData {
   tags?: string[];
   likes?: number;
   comments?: number;
+  featured?: boolean;
   author: ArticleAuthor;
 }
 
