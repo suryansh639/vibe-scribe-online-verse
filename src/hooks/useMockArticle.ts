@@ -39,13 +39,18 @@ export const useMockArticle = (id: string) => {
     content: article.content || "",
     excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
     coverImage: article.coverImage || "/placeholder.svg", // Provide default value
-    publishedAt: article.publishedAt,
-    readTime: article.readTime,
-    tags: article.tags,
-    likes: article.likes,
-    comments: article.comments,
+    publishedAt: article.publishedAt || new Date().toISOString(), // Provide default value
+    readTime: article.readTime || "5 min read",
+    tags: article.tags || [],
+    likes: article.likes || 0,
+    comments: article.comments || 0,
     featured: article.featured || false, // Ensure featured always has a value
-    author: article.author
+    author: article.author || {
+      id: "mock-author",
+      name: "Mock Author",
+      avatar: "/placeholder.svg",
+      bio: "This is a mock author bio for demonstration purposes."
+    }
   };
   
   return {

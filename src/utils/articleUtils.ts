@@ -25,11 +25,11 @@ export const findMockArticleById = (id: string): ArticleDetailData | null => {
     content: mockArticle.content || "",
     excerpt: mockArticle.excerpt || mockArticle.content?.substring(0, 150) + "..." || "", 
     coverImage: mockArticle.coverImage || "/placeholder.svg", // Provide default value
-    publishedAt: mockArticle.publishedAt,
-    readTime: mockArticle.readTime,
-    tags: mockArticle.tags,
-    likes: mockArticle.likes,
-    comments: mockArticle.comments,
+    publishedAt: mockArticle.publishedAt || new Date().toISOString(), // Provide default value
+    readTime: mockArticle.readTime || "5 min read",
+    tags: mockArticle.tags || [],
+    likes: mockArticle.likes || 0,
+    comments: mockArticle.comments || 0,
     featured: mockArticle.featured || false, // Ensure featured always has a value
     author: mockArticle.author || {
       id: "mock-author",

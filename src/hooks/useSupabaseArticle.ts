@@ -40,18 +40,19 @@ export const useSupabaseArticle = (id: string) => {
           id: data.id,
           title: data.title,
           content: data.content || "",
-          excerpt: data.excerpt,
-          coverImage: data.cover_image,
-          publishedAt: data.published_at || data.created_at,
+          excerpt: data.excerpt || data.content?.substring(0, 150) + "..." || "",
+          coverImage: data.cover_image || "/placeholder.svg",
+          publishedAt: data.published_at || data.created_at || new Date().toISOString(),
           readTime: data.read_time || "5 min read",
-          tags: data.tags,
+          tags: data.tags || [],
           likes: data.likes || 0,
           comments: data.comments || 0,
+          featured: data.featured || false, // Make sure featured is provided
           author: {
             id: data.author.id,
             name: data.author.full_name || data.author.username || "Anonymous",
-            avatar: data.author.avatar_url,
-            bio: data.author.bio
+            avatar: data.author.avatar_url || "/placeholder.svg",
+            bio: data.author.bio || ""
           }
         };
         
