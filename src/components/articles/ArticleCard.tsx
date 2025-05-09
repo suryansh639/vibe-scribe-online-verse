@@ -24,6 +24,9 @@ export interface ArticleProps {
   comments: number;
 }
 
+// Also export this interface for use in other components
+export type ArticleListItem = ArticleProps;
+
 const ArticleCard = ({
   id,
   title,

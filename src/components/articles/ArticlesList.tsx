@@ -75,7 +75,18 @@ const ArticlesList = ({
             </div>
           }
         >
-          <ArticleCard {...article} />
+          <ArticleCard 
+            id={article.id}
+            title={article.title}
+            excerpt={article.excerpt}
+            coverImage={article.coverImage}
+            author={article.author}
+            publishedAt={article.publishedAt}
+            readTime={article.readTime}
+            tags={article.tags}
+            likes={article.likes || 0}
+            comments={article.comments || 0}
+          />
         </Suspense>
       ))}
     </div>

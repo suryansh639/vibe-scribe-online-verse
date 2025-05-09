@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { isValidUUID } from "@/utils/articleUtils";
 import { useMockArticle } from "./useMockArticle";
@@ -68,7 +67,7 @@ export const useArticleDetail = (id: string | undefined): UseArticleDetailResult
             coverImage: directArticle.coverImage || "/placeholder.svg",
             publishedAt: directArticle.publishedAt || new Date().toISOString(),
             readTime: directArticle.readTime || "5 min read",
-            tags: directArticle.tags || [], // Ensure tags always has a value (empty array if undefined)
+            tags: directArticle.tags || [],
             likes: directArticle.likes || 0,
             comments: directArticle.comments || 0,
             featured: directArticle.featured || false,

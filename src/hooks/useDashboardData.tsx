@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
-import type { ArticleListItem } from "@/components/articles/ArticlesList";
+import type { ArticleListItem } from "@/components/articles/ArticleCard";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 

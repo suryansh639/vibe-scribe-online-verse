@@ -1,10 +1,8 @@
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bookmark, Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import ArticleCard from "@/components/articles/ArticleCard";
-import type { ArticleListItem } from "@/components/articles/ArticlesList";
+import ArticleCard, { ArticleListItem } from "@/components/articles/ArticleCard";
 
 interface DashboardTabsProps {
   myArticles: ArticleListItem[];

@@ -5,7 +5,8 @@ import Layout from "@/components/layout/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import PopularTopicsSidebar from "@/components/articles/PopularTopicsSidebar";
 import ArticleSearchBar from "@/components/articles/ArticleSearchBar";
-import ArticlesList, { ArticleListItem } from "@/components/articles/ArticlesList";
+import ArticlesList from "@/components/articles/ArticlesList";
+import { ArticleListItem } from "@/components/articles/ArticleCard";
 
 const AllArticles = () => {
   const [searchParams, setSearchParams] = useSearchParams();

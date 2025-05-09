@@ -37,7 +37,19 @@ const ArticleTabs = ({ articles, loading }: ArticleTabsProps) => {
           <Suspense fallback={<ArticleLoadingState />}>
             <div>
               {articles.map(article => (
-                <ArticleCard key={article.id} {...article} />
+                <ArticleCard 
+                  key={article.id}
+                  id={article.id}
+                  title={article.title}
+                  excerpt={article.excerpt}
+                  coverImage={article.coverImage}
+                  author={article.author}
+                  publishedAt={article.publishedAt}
+                  readTime={article.readTime}
+                  tags={article.tags}
+                  likes={article.likes || 0}
+                  comments={article.comments || 0}
+                />
               ))}
             </div>
           </Suspense>
@@ -54,9 +66,21 @@ const ArticleTabs = ({ articles, loading }: ArticleTabsProps) => {
             <div>
               {/* For demo, we'll use the same articles but sorted by likes */}
               {[...articles]
-                .sort((a, b) => b.likes - a.likes)
+                .sort((a, b) => (b.likes || 0) - (a.likes || 0))
                 .map(article => (
-                  <ArticleCard key={article.id} {...article} />
+                  <ArticleCard 
+                    key={article.id}
+                    id={article.id}
+                    title={article.title}
+                    excerpt={article.excerpt}
+                    coverImage={article.coverImage}
+                    author={article.author}
+                    publishedAt={article.publishedAt}
+                    readTime={article.readTime}
+                    tags={article.tags}
+                    likes={article.likes || 0}
+                    comments={article.comments || 0}
+                  />
                 ))}
             </div>
           </Suspense>

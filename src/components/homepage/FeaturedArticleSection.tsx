@@ -31,7 +31,18 @@ const FeaturedArticleSection = ({ article, loading }: FeaturedArticleSectionProp
             <LoadingSpinner size="lg" />
           </div>
         }>
-          <FeaturedArticle {...article} />
+          <FeaturedArticle 
+            id={article.id}
+            title={article.title}
+            excerpt={article.excerpt}
+            coverImage={article.coverImage}
+            author={article.author}
+            publishedAt={article.publishedAt}
+            readTime={article.readTime}
+            tags={article.tags}
+            likes={article.likes || 0}
+            comments={article.comments || 0}
+          />
         </Suspense>
       ) : (
         <div className="bg-gray-100 rounded-xl p-8 flex justify-center items-center h-64 text-center">

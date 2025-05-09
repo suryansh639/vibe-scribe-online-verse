@@ -25,8 +25,29 @@ const HomePage = () => {
     return () => clearTimeout(timer);
   }, []);
   
+  // Ensure all articles conform to ArticleDetailData interface
+  const processedArticles: ArticleDetailData[] = articles.map(article => ({
+    id: article.id,
+    title: article.title,
+    content: article.content || "",
+    excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
+    coverImage: article.coverImage || "/placeholder.svg",
+    publishedAt: article.publishedAt || new Date().toISOString(),
+    readTime: article.readTime || "5 min read",
+    tags: article.tags || [],
+    likes: article.likes || 0,
+    comments: article.comments || 0,
+    featured: article.featured || false,
+    author: article.author || {
+      id: "mock-author",
+      name: "Mock Author",
+      avatar: "/placeholder.svg",
+      bio: "This is a mock author bio for demonstration purposes."
+    }
+  }));
+  
   // Get the featured article - either look for one explicitly marked as featured or use the first one
-  const featuredArticle = articles.find(article => article.featured) || articles[0];
+  const featuredArticle = processedArticles.find(article => article.featured) || processedArticles[0];
 
   return (
     <Layout>
@@ -49,10 +70,10 @@ const HomePage = () => {
         {/* Main content with sidebar layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main content - Article list */}
-          <MainContent articles={articles} loading={loading} />
+          <MainContent articles={processedArticles} loading={loading} />
           
           {/* Sidebar */}
-          <Sidebar popularTags={articles.flatMap(article => article.tags || []).slice(0, 12)} />
+          <Sidebar popularTags={processedArticles.flatMap(article => article.tags || []).slice(0, 12)} />
         </div>
       </div>
     </Layout>

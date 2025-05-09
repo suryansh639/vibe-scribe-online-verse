@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ArticleDetailData, RelatedArticle } from "./types/articleTypes";
@@ -42,11 +43,11 @@ export const useSupabaseArticle = (id: string) => {
           excerpt: data.excerpt || data.content?.substring(0, 150) + "..." || "",
           coverImage: data.cover_image || "/placeholder.svg",
           publishedAt: data.published_at || data.created_at || new Date().toISOString(),
-          readTime: data.read_time || "5 min read", // Ensure readTime is always provided
+          readTime: data.read_time || "5 min read",
           tags: data.tags || [],
           likes: data.likes || 0,
           comments: data.comments || 0,
-          featured: data.featured || false, // Make sure featured is provided
+          featured: data.featured || false,
           author: {
             id: data.author.id,
             name: data.author.full_name || data.author.username || "Anonymous",

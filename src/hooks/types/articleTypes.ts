@@ -21,14 +21,14 @@ export interface ArticleDetailData {
   id: string;
   title: string;
   content: string;
-  excerpt: string;  // Required
-  coverImage: string;  // Required
-  publishedAt: string;  // Required
-  readTime: string;  // Required
-  tags: string[];  // Changed from optional to required
-  likes?: number;
-  comments?: number;
-  featured: boolean;  // Required
+  excerpt: string;
+  coverImage: string;
+  publishedAt: string;
+  readTime: string;
+  tags: string[];
+  likes: number;  // Changed from optional to required
+  comments: number;  // Changed from optional to required
+  featured: boolean;
   author: ArticleAuthor;
 }
 
