@@ -7,6 +7,7 @@ import PopularTopicsSidebar from "@/components/articles/PopularTopicsSidebar";
 import ArticleSearchBar from "@/components/articles/ArticleSearchBar";
 import ArticlesList from "@/components/articles/ArticlesList";
 import { ArticleDetailData } from "@/hooks/types/articleTypes";
+import { articles as mockArticles } from "@/data/mockData";
 
 const AllArticles = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -24,102 +25,65 @@ const AllArticles = () => {
     setLoading(true);
 
     try {
-      let query = supabase
-        .from("articles")
-        .select(`
-          id,
-          title,
-          excerpt,
-          cover_image,
-          published_at,
-          created_at,
-          read_time,
-          tags,
-          likes,
-          comments,
-          profiles(id, full_name, username, avatar_url)
-        `)
-        .eq("status", "published")
-        .order("published_at", { ascending: false });
+      // Get user articles from localStorage
+      const userArticles = JSON.parse(localStorage.getItem('userArticles') || '[]');
+      
+      // Combine with mock articles, ensuring no duplicates by id
+      const combinedArticles = [...userArticles];
+      
+      // Add mock articles that don't exist in user articles
+      mockArticles.forEach(mockArticle => {
+        if (!combinedArticles.some(article => article.id === mockArticle.id)) {
+          combinedArticles.push(mockArticle);
+        }
+      });
+
+      let filteredArticles = combinedArticles;
 
       // Apply tag filter if present
       if (tagFilter) {
-        query = query.contains("tags", [tagFilter]);
+        filteredArticles = filteredArticles.filter(article => 
+          article.tags && article.tags.includes(tagFilter)
+        );
       }
 
       // Apply search filter if present
       if (searchFilter) {
-        query = query.or(
-          `title.ilike.%${searchFilter}%,excerpt.ilike.%${searchFilter}%,tags.cs.{%${searchFilter}%}`
+        const searchLower = searchFilter.toLowerCase();
+        filteredArticles = filteredArticles.filter(article => 
+          article.title.toLowerCase().includes(searchLower) ||
+          article.excerpt?.toLowerCase().includes(searchLower) ||
+          article.tags?.some(tag => tag.toLowerCase().includes(searchLower))
         );
       }
 
-      // Set a reasonable limit to improve performance
-      query = query.limit(50);
-
-      const { data: articlesData, error } = await query;
-
-      if (error) {
-        console.error("Error fetching articles:", error);
-        setLoading(false);
-        return;
-      }
-
-      if (!articlesData || articlesData.length === 0) {
-        setArticles([]);
-        setLoading(false);
-        return;
-      }
-
-      const formattedArticles: ArticleDetailData[] = articlesData.map(article => ({
+      // Ensure all properties are present for ArticleDetailData
+      const processedArticles: ArticleDetailData[] = filteredArticles.map(article => ({
         id: article.id,
         title: article.title,
+        content: article.content || "",
         excerpt: article.excerpt || "",
-        content: "", // Add required content field (empty string as default)
-        coverImage: article.cover_image || "",
+        coverImage: article.coverImage || "/placeholder.svg",
         author: {
-          id: article.profiles.id,
-          name: article.profiles.full_name || article.profiles.username || "Anonymous",
-          avatar: article.profiles.avatar_url || ""
+          id: article.author.id,
+          name: article.author.name || "Anonymous",
+          avatar: article.author.avatar || "/placeholder.svg",
+          bio: article.author.bio || "No bio available"
         },
-        publishedAt: article.published_at || article.created_at,
-        readTime: article.read_time || "5 min read",
+        publishedAt: article.publishedAt || article.created_at || new Date().toISOString(),
+        readTime: article.readTime || "5 min read",
         tags: article.tags || [],
         likes: article.likes || 0,
         comments: article.comments || 0,
-        featured: false // Add required featured field (default to false)
+        featured: article.featured || false
       }));
 
-      setArticles(formattedArticles);
-    } catch (err) {
-      console.error("Error in fetching articles:", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [tagFilter, searchFilter]);
+      setArticles(processedArticles);
 
-  // Optimize popular tags fetching
-  const fetchPopularTags = useCallback(async () => {
-    try {
-      const { data: articlesData, error } = await supabase
-        .from("articles")
-        .select("tags")
-        .eq("status", "published")
-        .limit(100); // Limit to improve performance
-
-      if (error || !articlesData) {
-        console.error("Error fetching tags:", error);
-        return;
-      }
-
-      // Count tag occurrences
-      const tagCounts = articlesData.reduce((counts: Record<string, number>, article) => {
-        if (!article.tags) return counts;
-
-        article.tags.forEach((tag: string) => {
-          counts[tag] = (counts[tag] || 0) + 1;
-        });
-
+      // Extract and count tags from all articles for popular tags
+      const allTags = processedArticles.flatMap(article => article.tags || []);
+      const tagCounts = allTags.reduce((counts: Record<string, number>, tag) => {
+        counts[tag] = (counts[tag] || 0) + 1;
         return counts;
       }, {} as Record<string, number>);
 
@@ -131,14 +95,15 @@ const AllArticles = () => {
 
       setPopularTags(sortedTags);
     } catch (err) {
-      console.error("Error in fetching popular tags:", err);
+      console.error("Error in fetching articles:", err);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [tagFilter, searchFilter]);
 
   useEffect(() => {
-    // Load articles and tags in parallel
-    Promise.all([fetchArticles(), fetchPopularTags()]);
-  }, [fetchArticles, fetchPopularTags]);
+    fetchArticles();
+  }, [fetchArticles]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

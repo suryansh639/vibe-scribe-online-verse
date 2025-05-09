@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -104,8 +105,13 @@ const Editor = () => {
         featured: false
       };
       
-      // Add the new article to the mockData.ts articles array
+      // Add the new article to the mockData.ts articles array in memory
       articles.unshift(newArticle); // Add to the beginning of the array
+      
+      // Store the article in localStorage to persist across page loads
+      const storedArticles = JSON.parse(localStorage.getItem('userArticles') || '[]');
+      storedArticles.unshift(newArticle);
+      localStorage.setItem('userArticles', JSON.stringify(storedArticles));
       
       // Also try to save to Supabase if connected
       const { data: article, error } = await supabase
