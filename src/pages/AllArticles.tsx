@@ -76,24 +76,24 @@ const AllArticles = () => {
       // Ensure all properties are present for ArticleDetailData
       const processedArticles: ArticleDetailData[] = filteredArticles.map(article => {
         // Handle Supabase data structure which has profiles nested
-        const authorData = article.profiles || article.author || {};
+        const authorData = article.profiles || {};
         
         return {
           id: article.id,
           title: article.title,
           content: article.content || "",
           excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
-          coverImage: article.cover_image || article.coverImage || "/placeholder.svg",
-          publishedAt: article.published_at || article.publishedAt || new Date().toISOString(),
-          readTime: article.read_time || article.readTime || "5 min read",
+          coverImage: article.cover_image || "/placeholder.svg",
+          publishedAt: article.published_at || new Date().toISOString(),
+          readTime: article.read_time || "5 min read",
           tags: article.tags || [],
           likes: article.likes || 0,
           comments: article.comments || 0,
           featured: article.featured || false,
           author: {
             id: authorData.id || article.author_id || "anonymous",
-            name: authorData.full_name || authorData.name || authorData.username || "Anonymous",
-            avatar: authorData.avatar_url || authorData.avatar || "/placeholder.svg",
+            name: authorData.full_name || authorData.username || "Anonymous",
+            avatar: authorData.avatar_url || "/placeholder.svg",
             bio: authorData.bio || "No bio available"
           }
         };
