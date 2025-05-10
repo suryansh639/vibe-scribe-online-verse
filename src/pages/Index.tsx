@@ -56,11 +56,14 @@ const HomePage = () => {
           // Use type assertion to handle potential null/undefined values
           const profiles = article.profiles as Record<string, any> | null | undefined;
           
+          // Get content from the article or provide default empty string
+          const content = article.content || "";
+          
           return {
             id: article.id,
             title: article.title,
-            content: article.content || "",
-            excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
+            content: content, // Ensure content is always defined
+            excerpt: article.excerpt || content?.substring(0, 150) + "..." || "",
             coverImage: article.cover_image || "/placeholder.svg",
             publishedAt: article.published_at || new Date().toISOString(),
             readTime: article.read_time || "5 min read",
