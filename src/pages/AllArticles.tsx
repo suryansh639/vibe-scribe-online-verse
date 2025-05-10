@@ -54,29 +54,31 @@ const AllArticles = () => {
         supabaseArticles = combinedArticles;
       }
 
-      let filteredArticles = supabaseArticles;
+      let filteredArticles = supabaseArticles || [];
 
       // Apply tag filter if present
       if (tagFilter) {
-        filteredArticles = filteredArticles.filter(article => 
-          article.tags && article.tags.includes(tagFilter)
+        filteredArticles = filteredArticles.filter((article: any) => 
+          article && article.tags && article.tags.includes(tagFilter)
         );
       }
 
       // Apply search filter if present
       if (searchFilter) {
         const searchLower = searchFilter.toLowerCase();
-        filteredArticles = filteredArticles.filter(article => 
-          article.title.toLowerCase().includes(searchLower) ||
-          article.excerpt?.toLowerCase().includes(searchLower) ||
-          article.tags?.some(tag => tag.toLowerCase().includes(searchLower))
+        filteredArticles = filteredArticles.filter((article: any) => 
+          article && (
+            (article.title && article.title.toLowerCase().includes(searchLower)) ||
+            (article.excerpt && article.excerpt.toLowerCase().includes(searchLower)) ||
+            (article.tags && article.tags.some((tag: string) => tag.toLowerCase().includes(searchLower)))
+          )
         );
       }
 
       // Transform all articles to match ArticleDetailData exactly
-      const processedArticles: ArticleDetailData[] = (filteredArticles || []).map(article => {
+      const processedArticles: ArticleDetailData[] = (filteredArticles || []).map((article: any) => {
         // Case 1: Handle articles from Supabase with profiles nested
-        if ('profiles' in article) {
+        if (article && 'profiles' in article) {
           const profiles = article.profiles as Record<string, any> | null | undefined;
           
           return {
@@ -100,7 +102,7 @@ const AllArticles = () => {
           };
         }
         // Case 2: Handle mock articles or localStorage articles with different structure
-        else if ('author' in article) {
+        else if (article && 'author' in article) {
           return {
             id: article.id || "",
             title: article.title || "",
@@ -122,11 +124,11 @@ const AllArticles = () => {
           };
         }
         // Case 3: Fallback for any other structure to ensure it matches ArticleDetailData
-        else {
+        else if (article) {
           return {
             id: article.id || "",
             title: article.title || "",
-            content: "", // Ensure content is never undefined
+            content: article.content || "", // Ensure content is never undefined
             excerpt: article.excerpt || "",
             coverImage: article.coverImage || article.cover_image || "/placeholder.svg",
             publishedAt: article.publishedAt || article.published_at || new Date().toISOString(),
@@ -137,6 +139,27 @@ const AllArticles = () => {
             featured: !!article.featured,
             author: {
               id: article.author_id || "anonymous",
+              name: "Anonymous",
+              avatar: "/placeholder.svg",
+              bio: "No bio available"
+            }
+          };
+        } else {
+          // If article is somehow null or undefined, return a default article
+          return {
+            id: "default-id",
+            title: "Default Title",
+            content: "",
+            excerpt: "Default excerpt",
+            coverImage: "/placeholder.svg",
+            publishedAt: new Date().toISOString(),
+            readTime: "5 min read",
+            tags: [],
+            likes: 0,
+            comments: 0,
+            featured: false,
+            author: {
+              id: "anonymous",
               name: "Anonymous",
               avatar: "/placeholder.svg",
               bio: "No bio available"

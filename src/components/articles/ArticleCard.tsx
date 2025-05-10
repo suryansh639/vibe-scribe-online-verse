@@ -16,6 +16,7 @@ export interface ArticleProps {
     id: string;
     name: string;
     avatar?: string;
+    bio?: string;
   };
   publishedAt: string;
   readTime: string;
