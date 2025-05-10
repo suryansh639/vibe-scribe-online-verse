@@ -115,9 +115,9 @@ const AllArticles = () => {
             id: article.author?.id || "unknown",
             name: article.author?.name || "Anonymous",
             avatar: article.author?.avatar || "/placeholder.svg",
-            bio: article.author?.bio || "No bio available"
+            bio: article.author?.bio || "No bio available"  // Added bio property to match the expected type
           },
-          publishedAt: article.publishedAt || article.created_at || new Date().toISOString(),
+          publishedAt: article.publishedAt || new Date().toISOString(), // Using publishedAt instead of created_at
           readTime: article.readTime || "5 min read",
           tags: article.tags || [],
           likes: article.likes || 0,
@@ -162,9 +162,9 @@ const AllArticles = () => {
           id: article.author?.id || "unknown", 
           name: article.author?.name || "Anonymous",
           avatar: article.author?.avatar || "/placeholder.svg",
-          bio: article.author?.bio || "No bio available"
+          bio: article.author?.bio || "No bio available"  // Added bio property
         },
-        publishedAt: article.publishedAt || new Date().toISOString(),
+        publishedAt: article.publishedAt || new Date().toISOString(),  // Using publishedAt instead of created_at
         readTime: article.readTime || "5 min read",
         tags: article.tags || [],
         likes: article.likes || 0,
