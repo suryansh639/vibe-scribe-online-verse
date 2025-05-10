@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { useToast } from "@/components/ui/use-toast";
@@ -52,8 +51,30 @@ const HomePage = () => {
         
         // Transform all articles to match ArticleDetailData exactly
         const processedArticles: ArticleDetailData[] = (supabaseArticles || []).map((article: any) => {
+          if (!article) {
+            return {
+              id: "default-id",
+              title: "Default Title",
+              content: "",
+              excerpt: "Default excerpt",
+              coverImage: "/placeholder.svg",
+              publishedAt: new Date().toISOString(),
+              readTime: "5 min read",
+              tags: [],
+              likes: 0,
+              comments: 0,
+              featured: false,
+              author: {
+                id: "anonymous",
+                name: "Anonymous",
+                avatar: "/placeholder.svg",
+                bio: "No bio available"
+              }
+            };
+          }
+          
           // Case 1: Handle articles from Supabase with profiles nested
-          if (article && 'profiles' in article) {
+          if ('profiles' in article) {
             const profiles = article.profiles as Record<string, any> | null | undefined;
             
             return {
@@ -77,7 +98,7 @@ const HomePage = () => {
             };
           }
           // Case 2: Handle mock articles or localStorage articles with different structure
-          else if (article && 'author' in article) {
+          else if ('author' in article) {
             return {
               id: article.id || "",
               title: article.title || "",
@@ -99,11 +120,11 @@ const HomePage = () => {
             };
           }
           // Case 3: Fallback for any other structure to ensure it matches ArticleDetailData
-          else if (article) {
+          else {
             return {
               id: article.id || "",
               title: article.title || "",
-              content: article.content || "", // Ensure content is never undefined
+              content: article.content || "", 
               excerpt: article.excerpt || "",
               coverImage: article.coverImage || article.cover_image || "/placeholder.svg",
               publishedAt: article.publishedAt || article.published_at || new Date().toISOString(),
@@ -114,27 +135,6 @@ const HomePage = () => {
               featured: !!article.featured,
               author: {
                 id: article.author_id || "anonymous",
-                name: "Anonymous",
-                avatar: "/placeholder.svg",
-                bio: "No bio available"
-              }
-            };
-          } else {
-            // If article is somehow null or undefined, return a default article
-            return {
-              id: "default-id",
-              title: "Default Title",
-              content: "",
-              excerpt: "Default excerpt",
-              coverImage: "/placeholder.svg",
-              publishedAt: new Date().toISOString(),
-              readTime: "5 min read",
-              tags: [],
-              likes: 0,
-              comments: 0,
-              featured: false,
-              author: {
-                id: "anonymous",
                 name: "Anonymous",
                 avatar: "/placeholder.svg",
                 bio: "No bio available"

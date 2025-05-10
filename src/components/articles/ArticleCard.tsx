@@ -1,4 +1,3 @@
-
 import { Link } from "react-router-dom";
 import { Heart, MessageSquare, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +15,7 @@ export interface ArticleProps {
     id: string;
     name: string;
     avatar?: string;
-    bio?: string;
+    bio?: string; // Make bio optional to match what's used in the components
   };
   publishedAt: string;
   readTime: string;
