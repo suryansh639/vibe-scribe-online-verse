@@ -6,7 +6,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import ArticleForm from "@/components/editor/ArticleForm";
-import { articles } from "@/data/mockData";
 import { v4 as uuidv4 } from "@/utils/uuid";
 import { slugify } from "@/lib/utils";
 import { ArticleDetailData } from "@/hooks/types/articleTypes";
@@ -15,6 +14,7 @@ const Editor = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [isPublishing, setIsPublishing] = useState(false);
@@ -44,18 +44,47 @@ const Editor = () => {
   const handleCoverImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      setCoverImageFile(file); // Store the actual file for upload
       const imageUrl = URL.createObjectURL(file);
       setCoverImage(imageUrl);
     }
   };
   
   const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .trim()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/[\s_-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+    return slugify(title);
+  };
+
+  // Function to upload image to Supabase storage
+  const uploadImage = async (file: File): Promise<string | null> => {
+    if (!file || !user) {
+      return null;
+    }
+
+    try {
+      // Create a unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${uuidv4()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      // Upload to Supabase storage
+      const { data, error } = await supabase.storage
+        .from('article-images')
+        .upload(filePath, file);
+
+      if (error) {
+        throw error;
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('article-images')
+        .getPublicUrl(filePath);
+
+      return urlData.publicUrl;
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      return null;
+    }
   };
 
   const handlePublish = async () => {
@@ -83,44 +112,22 @@ const Editor = () => {
     try {
       const wordCount = content.trim().split(/\s+/).length;
       const readTime = `${Math.max(1, Math.ceil(wordCount / 200))} min read`;
+      const slug = generateSlug(title);
       
-      // Create a new article object that conforms to ArticleDetailData
-      const newArticle: ArticleDetailData = {
-        id: uuidv4(), // Generate a unique ID
-        title: title,
-        excerpt: content.substring(0, 150) + '...',
-        content: content,
-        coverImage: coverImage || "/placeholder.svg", // Ensure coverImage is never null
-        author: {
-          id: user.id,
-          name: user.user_metadata?.full_name || "Anonymous User",
-          avatar: user.user_metadata?.avatar_url || "/placeholder.svg", // Ensure avatar is never undefined
-          bio: user.user_metadata?.bio || "No bio available"
-        },
-        publishedAt: new Date().toISOString(),
-        readTime: readTime,
-        tags: tags.length > 0 ? tags : ["Uncategorized"], // Ensure tags is never empty
-        likes: 0,
-        comments: 0,
-        featured: false
-      };
+      // Upload cover image to Supabase Storage if provided
+      let coverImageUrl = coverImage;
+      if (coverImageFile) {
+        coverImageUrl = await uploadImage(coverImageFile);
+      }
       
-      // Add the new article to the mockData.ts articles array in memory
-      articles.unshift(newArticle); // Add to the beginning of the array
-      
-      // Store the article in localStorage to persist across page loads
-      const storedArticles = JSON.parse(localStorage.getItem('userArticles') || '[]');
-      storedArticles.unshift(newArticle);
-      localStorage.setItem('userArticles', JSON.stringify(storedArticles));
-      
-      // Also try to save to Supabase if connected
+      // Insert article into Supabase
       const { data: article, error } = await supabase
         .from('articles')
         .insert({
           title,
           content,
           excerpt: content.substring(0, 150) + '...',
-          cover_image: coverImage,
+          cover_image: coverImageUrl || "/placeholder.svg",
           tags,
           author_id: user.id,
           status: 'published',
@@ -129,27 +136,27 @@ const Editor = () => {
           read_time: readTime,
           likes: 0,
           comments: 0,
-          slug: generateSlug(title)
+          slug
         })
         .select()
         .single();
 
-      // Display success message regardless of Supabase result (we have mock data as backup)
+      if (error) throw error;
+
       toast({
         title: "Article published!",
         description: "Your article has been published successfully",
       });
       
       // Navigate to the article page
-      navigate(`/article/${newArticle.id}/${generateSlug(title)}`);
+      navigate(`/article/${article.id}/${slug}`);
     } catch (err) {
       console.error("Error publishing article:", err);
-      // If Supabase fails but we've already added to mock data, we can still consider it a success
       toast({
-        title: "Article published!",
-        description: "Your article has been published locally",
+        title: "Publishing failed",
+        description: "There was an error publishing your article. Please try again.",
+        variant: "destructive",
       });
-      navigate('/');
     } finally {
       setIsPublishing(false);
     }
@@ -176,16 +183,23 @@ const Editor = () => {
     }
     
     try {
+      // Upload cover image to Supabase Storage if provided
+      let coverImageUrl = coverImage;
+      if (coverImageFile) {
+        coverImageUrl = await uploadImage(coverImageFile);
+      }
+
       const { error } = await supabase
         .from('articles')
         .insert({
           title,
           content,
-          cover_image: coverImage,
+          cover_image: coverImageUrl,
           tags,
           author_id: user.id,
           status: 'draft',
-          published: false
+          published: false,
+          slug: generateSlug(title)
         });
 
       if (error) throw error;
@@ -218,7 +232,10 @@ const Editor = () => {
         onTitleChange={(value) => setTitle(value)}
         onContentChange={(value) => setContent(value)}
         onCoverImageUpload={handleCoverImageUpload}
-        onCoverImageRemove={() => setCoverImage(null)}
+        onCoverImageRemove={() => {
+          setCoverImage(null);
+          setCoverImageFile(null);
+        }}
         onTagInputChange={setTagInput}
         onAddTag={handleAddTag}
         onRemoveTag={handleRemoveTag}

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { useToast } from "@/components/ui/use-toast";
-import { articles as mockArticles } from "@/data/mockData"; // Import articles from mockData
+import { articles as mockArticles } from "@/data/mockData"; // Import articles from mockData for fallback
 import HeroSection from "@/components/homepage/HeroSection";
 import FeaturedAuthors from "@/components/homepage/FeaturedAuthors";
 import CategoryHighlights from "@/components/homepage/CategoryHighlights";
@@ -11,6 +11,7 @@ import MainContent from "@/components/homepage/MainContent";
 import Sidebar from "@/components/homepage/Sidebar";
 import FeaturedArticleSection from "@/components/homepage/FeaturedArticleSection";
 import { ArticleDetailData } from "@/hooks/types/articleTypes";
+import { supabase } from "@/integrations/supabase/client";
 
 const HomePage = () => {
   const { toast } = useToast();
@@ -18,47 +19,119 @@ const HomePage = () => {
   const [articles, setArticles] = useState<ArticleDetailData[]>([]);
   
   useEffect(() => {
-    // Combine mock articles with user-created articles from localStorage
-    const fetchArticles = () => {
-      // Get user articles from localStorage
-      const userArticles = JSON.parse(localStorage.getItem('userArticles') || '[]');
-      
-      // Combine with mock articles, ensuring no duplicates by id
-      const combinedArticles = [...userArticles];
-      
-      // Add mock articles that don't exist in user articles
-      mockArticles.forEach(mockArticle => {
-        if (!combinedArticles.some(article => article.id === mockArticle.id)) {
-          combinedArticles.push(mockArticle);
+    // Fetch articles from Supabase and fall back to mock data if needed
+    const fetchArticles = async () => {
+      try {
+        // Fetch articles from Supabase
+        const { data, error } = await supabase
+          .from('articles')
+          .select(`
+            id, 
+            title, 
+            content, 
+            excerpt, 
+            cover_image, 
+            published_at, 
+            read_time, 
+            tags, 
+            likes, 
+            comments, 
+            featured,
+            profiles:author_id (id, full_name, username, avatar_url, bio)
+          `)
+          .eq('published', true)
+          .order('published_at', { ascending: false });
+          
+        if (error) {
+          console.error("Error fetching articles from Supabase:", error);
+          throw error;
         }
-      });
-      
-      // Ensure all articles conform to ArticleDetailData interface
-      const processedArticles: ArticleDetailData[] = combinedArticles.map(article => ({
-        id: article.id,
-        title: article.title,
-        content: article.content || "",
-        excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
-        coverImage: article.coverImage || "/placeholder.svg",
-        publishedAt: article.publishedAt || new Date().toISOString(),
-        readTime: article.readTime || "5 min read",
-        tags: article.tags || [],
-        likes: article.likes || 0,
-        comments: article.comments || 0,
-        featured: article.featured || false,
-        author: article.author || {
-          id: "mock-author",
-          name: "Mock Author",
-          avatar: "/placeholder.svg",
-          bio: "This is a mock author bio for demonstration purposes."
+        
+        // Map Supabase data to ArticleDetailData format
+        let processedArticles: ArticleDetailData[] = [];
+        
+        if (data && data.length > 0) {
+          processedArticles = data.map(article => ({
+            id: article.id,
+            title: article.title,
+            content: article.content || "",
+            excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
+            coverImage: article.cover_image || "/placeholder.svg",
+            publishedAt: article.published_at || new Date().toISOString(),
+            readTime: article.read_time || "5 min read",
+            tags: article.tags || [],
+            likes: article.likes || 0,
+            comments: article.comments || 0,
+            featured: article.featured || false,
+            author: {
+              id: article.profiles?.id || "unknown",
+              name: article.profiles?.full_name || article.profiles?.username || "Anonymous",
+              avatar: article.profiles?.avatar_url || "/placeholder.svg",
+              bio: article.profiles?.bio || "No bio available"
+            }
+          }));
         }
-      }));
-      
-      setArticles(processedArticles);
-      setLoading(false);
+        
+        // If no articles from database or fewer than 5, add mock articles
+        if (processedArticles.length < 5) {
+          // Add mock articles that don't exist in database articles
+          mockArticles.forEach(mockArticle => {
+            if (!processedArticles.some(article => article.id === mockArticle.id)) {
+              processedArticles.push({
+                id: mockArticle.id,
+                title: mockArticle.title,
+                content: mockArticle.content || "",
+                excerpt: mockArticle.excerpt || mockArticle.content?.substring(0, 150) + "..." || "",
+                coverImage: mockArticle.coverImage || "/placeholder.svg",
+                publishedAt: mockArticle.publishedAt || new Date().toISOString(),
+                readTime: mockArticle.readTime || "5 min read",
+                tags: mockArticle.tags || [],
+                likes: mockArticle.likes || 0,
+                comments: mockArticle.comments || 0,
+                featured: mockArticle.featured || false,
+                author: mockArticle.author || {
+                  id: "mock-author",
+                  name: "Mock Author",
+                  avatar: "/placeholder.svg",
+                  bio: "This is a mock author bio for demonstration purposes."
+                }
+              });
+            }
+          });
+        }
+        
+        setArticles(processedArticles);
+      } catch (error) {
+        console.error("Error in fetchArticles:", error);
+        
+        // Fall back to mock articles if database fetch fails
+        const processedArticles = mockArticles.map(article => ({
+          id: article.id,
+          title: article.title,
+          content: article.content || "",
+          excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
+          coverImage: article.coverImage || "/placeholder.svg",
+          publishedAt: article.publishedAt || new Date().toISOString(),
+          readTime: article.readTime || "5 min read",
+          tags: article.tags || [],
+          likes: article.likes || 0,
+          comments: article.comments || 0,
+          featured: article.featured || false,
+          author: article.author || {
+            id: "mock-author",
+            name: "Mock Author",
+            avatar: "/placeholder.svg",
+            bio: "This is a mock author bio for demonstration purposes."
+          }
+        }));
+        
+        setArticles(processedArticles);
+      } finally {
+        setLoading(false);
+      }
     };
     
-    // Simulate loading time
+    // Simulate loading time for better UX
     const timer = setTimeout(() => {
       fetchArticles();
     }, 800);
