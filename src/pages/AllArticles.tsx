@@ -84,18 +84,18 @@ const AllArticles = () => {
           content: article.content || "",
           excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
           coverImage: article.cover_image || article.coverImage || "/placeholder.svg",
-          author: {
-            id: authorData.id || article.author_id || "anonymous",
-            name: authorData.full_name || authorData.name || authorData.username || "Anonymous",
-            avatar: authorData.avatar_url || authorData.avatar || "/placeholder.svg",
-            bio: authorData.bio || "No bio available"
-          },
           publishedAt: article.published_at || article.publishedAt || new Date().toISOString(),
           readTime: article.read_time || article.readTime || "5 min read",
           tags: article.tags || [],
           likes: article.likes || 0,
           comments: article.comments || 0,
-          featured: article.featured || false
+          featured: article.featured || false,
+          author: {
+            id: authorData.id || article.author_id || "anonymous",
+            name: authorData.full_name || authorData.name || authorData.username || "Anonymous",
+            avatar: authorData.avatar_url || authorData.avatar || "/placeholder.svg",
+            bio: authorData.bio || "No bio available"
+          }
         };
       });
 
