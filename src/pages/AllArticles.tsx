@@ -7,7 +7,7 @@ import PopularTopicsSidebar from "@/components/articles/PopularTopicsSidebar";
 import ArticleSearchBar from "@/components/articles/ArticleSearchBar";
 import ArticlesList from "@/components/articles/ArticlesList";
 import { ArticleDetailData } from "@/hooks/types/articleTypes";
-import { articles as mockArticles } from "@/data/mockData"; // Keep for fallback
+import { articles as mockArticles } from "@/data/mockData";
 
 const AllArticles = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -25,202 +25,81 @@ const AllArticles = () => {
     setLoading(true);
 
     try {
-      // Build query based on filters
-      let query = supabase
-        .from('articles')
-        .select(`
-          id, 
-          title, 
-          content, 
-          excerpt, 
-          cover_image, 
-          published_at, 
-          read_time, 
-          tags, 
-          likes, 
-          comments, 
-          featured,
-          profiles:author_id (id, full_name, username, avatar_url, bio)
-        `)
-        .eq('published', true);
+      // Get user articles from localStorage
+      const userArticles = JSON.parse(localStorage.getItem('userArticles') || '[]');
+      
+      // Combine with mock articles, ensuring no duplicates by id
+      const combinedArticles = [...userArticles];
+      
+      // Add mock articles that don't exist in user articles
+      mockArticles.forEach(mockArticle => {
+        if (!combinedArticles.some(article => article.id === mockArticle.id)) {
+          combinedArticles.push(mockArticle);
+        }
+      });
+
+      let filteredArticles = combinedArticles;
 
       // Apply tag filter if present
       if (tagFilter) {
-        // Using contains() for array search
-        query = query.contains('tags', [tagFilter]);
-      }
-
-      // Apply search filter if present
-      if (searchFilter) {
-        // Using ilike for case-insensitive search in text fields
-        query = query.or(`title.ilike.%${searchFilter}%,excerpt.ilike.%${searchFilter}%,content.ilike.%${searchFilter}%`);
-      }
-
-      // Execute the query
-      const { data, error } = await query.order('published_at', { ascending: false });
-
-      if (error) {
-        throw error;
-      }
-
-      // Map database results to ArticleDetailData
-      let processedArticles: ArticleDetailData[] = [];
-      
-      if (data && data.length > 0) {
-        processedArticles = data.map(article => ({
-          id: article.id,
-          title: article.title,
-          content: article.content || "",
-          excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
-          coverImage: article.cover_image || "/placeholder.svg",
-          publishedAt: article.published_at || new Date().toISOString(),
-          readTime: article.read_time || "5 min read",
-          tags: article.tags || [],
-          likes: article.likes || 0,
-          comments: article.comments || 0,
-          featured: article.featured || false,
-          author: {
-            id: article.profiles?.id || "unknown",
-            name: article.profiles?.full_name || article.profiles?.username || "Anonymous",
-            avatar: article.profiles?.avatar_url || "/placeholder.svg",
-            bio: article.profiles?.bio || "No bio available"
-          }
-        }));
-      } else {
-        // Fallback to mock data if filters match
-        let filteredMockArticles = mockArticles;
-        
-        if (tagFilter) {
-          filteredMockArticles = filteredMockArticles.filter(article => 
-            article.tags && article.tags.includes(tagFilter)
-          );
-        }
-
-        if (searchFilter) {
-          const searchLower = searchFilter.toLowerCase();
-          filteredMockArticles = filteredMockArticles.filter(article => 
-            article.title.toLowerCase().includes(searchLower) ||
-            article.excerpt?.toLowerCase().includes(searchLower) ||
-            article.tags?.some(tag => tag.toLowerCase().includes(searchLower))
-          );
-        }
-        
-        processedArticles = filteredMockArticles.map(article => ({
-          id: article.id,
-          title: article.title,
-          content: article.content || "",
-          excerpt: article.excerpt || "",
-          coverImage: article.coverImage || "/placeholder.svg",
-          author: {
-            id: article.author?.id || "unknown",
-            name: article.author?.name || "Anonymous",
-            avatar: article.author?.avatar || "/placeholder.svg",
-            bio: article.author?.bio || "No bio available"  // Added bio property to match the expected type
-          },
-          publishedAt: article.publishedAt || new Date().toISOString(), // Using publishedAt instead of created_at
-          readTime: article.readTime || "5 min read",
-          tags: article.tags || [],
-          likes: article.likes || 0,
-          comments: article.comments || 0,
-          featured: article.featured || false
-        }));
-      }
-
-      setArticles(processedArticles);
-
-      // Fetch popular tags
-      await fetchPopularTags();
-    } catch (err) {
-      console.error("Error fetching articles:", err);
-      
-      // Fallback to mock data with filtering
-      let filteredMockArticles = mockArticles;
-      
-      if (tagFilter) {
-        filteredMockArticles = filteredMockArticles.filter(article => 
+        filteredArticles = filteredArticles.filter(article => 
           article.tags && article.tags.includes(tagFilter)
         );
       }
 
+      // Apply search filter if present
       if (searchFilter) {
         const searchLower = searchFilter.toLowerCase();
-        filteredMockArticles = filteredMockArticles.filter(article => 
+        filteredArticles = filteredArticles.filter(article => 
           article.title.toLowerCase().includes(searchLower) ||
           article.excerpt?.toLowerCase().includes(searchLower) ||
-          article.content?.toLowerCase().includes(searchLower) ||
           article.tags?.some(tag => tag.toLowerCase().includes(searchLower))
         );
       }
-      
-      const processedArticles = filteredMockArticles.map(article => ({
+
+      // Ensure all properties are present for ArticleDetailData
+      const processedArticles: ArticleDetailData[] = filteredArticles.map(article => ({
         id: article.id,
         title: article.title,
         content: article.content || "",
         excerpt: article.excerpt || "",
         coverImage: article.coverImage || "/placeholder.svg",
         author: {
-          id: article.author?.id || "unknown", 
-          name: article.author?.name || "Anonymous",
-          avatar: article.author?.avatar || "/placeholder.svg",
-          bio: article.author?.bio || "No bio available"  // Added bio property
+          id: article.author.id,
+          name: article.author.name || "Anonymous",
+          avatar: article.author.avatar || "/placeholder.svg",
+          bio: article.author.bio || "No bio available"
         },
-        publishedAt: article.publishedAt || new Date().toISOString(),  // Using publishedAt instead of created_at
+        publishedAt: article.publishedAt || article.created_at || new Date().toISOString(),
         readTime: article.readTime || "5 min read",
         tags: article.tags || [],
         likes: article.likes || 0,
         comments: article.comments || 0,
         featured: article.featured || false
       }));
-      
+
       setArticles(processedArticles);
-      
-      // Extract tags from mock articles
+
+      // Extract and count tags from all articles for popular tags
       const allTags = processedArticles.flatMap(article => article.tags || []);
       const tagCounts = allTags.reduce((counts: Record<string, number>, tag) => {
         counts[tag] = (counts[tag] || 0) + 1;
         return counts;
       }, {} as Record<string, number>);
 
+      // Sort tags by count and take top 10
       const sortedTags = Object.entries(tagCounts)
         .sort((a, b) => b[1] - a[1])
         .slice(0, 10)
         .map(([tag]) => tag);
 
       setPopularTags(sortedTags);
+    } catch (err) {
+      console.error("Error in fetching articles:", err);
     } finally {
       setLoading(false);
     }
   }, [tagFilter, searchFilter]);
-
-  const fetchPopularTags = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('articles')
-        .select('tags')
-        .eq('published', true);
-
-      if (error) throw error;
-
-      if (data) {
-        const tagCounts: Record<string, number> = {};
-        data.forEach(article => {
-          if (!article.tags) return;
-          article.tags.forEach((tag: string) => {
-            tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-          });
-        });
-        
-        const sortedTags = Object.entries(tagCounts)
-          .sort((a, b) => b[1] - a[1])
-          .slice(0, 10)
-          .map(([tag]) => tag);
-          
-        setPopularTags(sortedTags);
-      }
-    } catch (error) {
-      console.error("Error fetching popular tags:", error);
-    }
-  };
 
   useEffect(() => {
     fetchArticles();
