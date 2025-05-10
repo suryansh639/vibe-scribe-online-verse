@@ -73,34 +73,76 @@ const AllArticles = () => {
         );
       }
 
-      // Ensure all properties are present for ArticleDetailData
-      const processedArticles: ArticleDetailData[] = filteredArticles.map(article => {
-        // Handle Supabase data structure which has profiles nested
-        // Use type assertion to handle potential null/undefined values
-        const profiles = article.profiles as Record<string, any> | null | undefined;
-        
-        // Get content from the article or provide default empty string
-        const content = article.content || "";
-        
-        return {
-          id: article.id,
-          title: article.title,
-          content: content, // Ensure content is always defined
-          excerpt: article.excerpt || content?.substring(0, 150) + "..." || "",
-          coverImage: article.cover_image || "/placeholder.svg",
-          publishedAt: article.published_at || new Date().toISOString(),
-          readTime: article.read_time || "5 min read",
-          tags: article.tags || [],
-          likes: article.likes || 0,
-          comments: article.comments || 0,
-          featured: article.featured || false,
-          author: {
-            id: profiles?.id || article.author_id || "anonymous",
-            name: profiles?.full_name || profiles?.username || "Anonymous",
-            avatar: profiles?.avatar_url || "/placeholder.svg",
-            bio: profiles?.bio || "No bio available"
-          }
-        };
+      // Transform all articles to match ArticleDetailData exactly
+      const processedArticles: ArticleDetailData[] = (filteredArticles || []).map(article => {
+        // Case 1: Handle articles from Supabase with profiles nested
+        if ('profiles' in article) {
+          const profiles = article.profiles as Record<string, any> | null | undefined;
+          
+          return {
+            id: article.id || "",
+            title: article.title || "",
+            content: article.content || "", // Ensure content is never undefined
+            excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
+            coverImage: article.cover_image || "/placeholder.svg",
+            publishedAt: article.published_at || new Date().toISOString(),
+            readTime: article.read_time || "5 min read",
+            tags: Array.isArray(article.tags) ? article.tags : [],
+            likes: typeof article.likes === 'number' ? article.likes : 0,
+            comments: typeof article.comments === 'number' ? article.comments : 0,
+            featured: !!article.featured,
+            author: {
+              id: profiles?.id || article.author_id || "anonymous",
+              name: profiles?.full_name || profiles?.username || "Anonymous",
+              avatar: profiles?.avatar_url || "/placeholder.svg",
+              bio: profiles?.bio || "No bio available"
+            }
+          };
+        }
+        // Case 2: Handle mock articles or localStorage articles with different structure
+        else if ('author' in article) {
+          return {
+            id: article.id || "",
+            title: article.title || "",
+            content: article.content || "", // Ensure content is never undefined
+            excerpt: article.excerpt || "",
+            coverImage: article.coverImage || "/placeholder.svg",
+            publishedAt: article.publishedAt || new Date().toISOString(),
+            readTime: article.readTime || "5 min read",
+            tags: Array.isArray(article.tags) ? article.tags : [],
+            likes: typeof article.likes === 'number' ? article.likes : 0,
+            comments: typeof article.comments === 'number' ? article.comments : 0,
+            featured: !!article.featured,
+            author: {
+              id: article.author?.id || "anonymous",
+              name: article.author?.name || "Anonymous",
+              avatar: article.author?.avatar || "/placeholder.svg",
+              bio: article.author?.bio || "No bio available"
+            }
+          };
+        }
+        // Case 3: Fallback for any other structure to ensure it matches ArticleDetailData
+        else {
+          return {
+            id: article.id || "",
+            title: article.title || "",
+            content: "", // Ensure content is never undefined
+            excerpt: article.excerpt || "",
+            coverImage: article.coverImage || article.cover_image || "/placeholder.svg",
+            publishedAt: article.publishedAt || article.published_at || new Date().toISOString(),
+            readTime: article.readTime || article.read_time || "5 min read",
+            tags: Array.isArray(article.tags) ? article.tags : [],
+            likes: typeof article.likes === 'number' ? article.likes : 0,
+            comments: typeof article.comments === 'number' ? article.comments : 0,
+            featured: !!article.featured,
+            author: {
+              id: article.author_id || "anonymous",
+              name: "Anonymous",
+              avatar: "/placeholder.svg",
+              bio: "No bio available"
+            }
+          };
+        }
       });
 
       setArticles(processedArticles);
