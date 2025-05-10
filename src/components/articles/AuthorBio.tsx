@@ -8,7 +8,7 @@ interface AuthorBioProps {
     id: string;
     name: string;
     avatar: string;
-    bio?: string; // Make bio optional to match the ArticleProps
+    bio?: string;
   };
 }
 
