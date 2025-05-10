@@ -45,7 +45,7 @@ const ImageUploader = ({ coverImage, onImageUpload, onImageRemove }: ImageUpload
                 Drag and drop an image, or <span className="text-brand-orange">browse</span>
               </p>
               <p className="text-xs text-gray-500">
-                Recommended: 1200 x 600 pixels (16:9 ratio)
+                Images will be stored in Supabase storage
               </p>
             </label>
           </div>

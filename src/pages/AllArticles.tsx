@@ -25,20 +25,36 @@ const AllArticles = () => {
     setLoading(true);
 
     try {
-      // Get user articles from localStorage
-      const userArticles = JSON.parse(localStorage.getItem('userArticles') || '[]');
-      
-      // Combine with mock articles, ensuring no duplicates by id
-      const combinedArticles = [...userArticles];
-      
-      // Add mock articles that don't exist in user articles
-      mockArticles.forEach(mockArticle => {
-        if (!combinedArticles.some(article => article.id === mockArticle.id)) {
-          combinedArticles.push(mockArticle);
-        }
-      });
+      // First try to fetch from Supabase
+      let { data: supabaseArticles, error } = await supabase
+        .from('articles')
+        .select(`
+          id, title, content, excerpt, cover_image, published_at, read_time, tags, likes, comments, featured,
+          author_id, profiles(id, full_name, username, avatar_url, bio)
+        `)
+        .order('published_at', { ascending: false });
 
-      let filteredArticles = combinedArticles;
+      // If there's an error or no data, fall back to localStorage and mockData
+      if (error || !supabaseArticles || supabaseArticles.length === 0) {
+        console.log("Falling back to localStorage and mockData", error);
+        
+        // Get user articles from localStorage
+        const userArticles = JSON.parse(localStorage.getItem('userArticles') || '[]');
+        
+        // Combine with mock articles, ensuring no duplicates by id
+        const combinedArticles = [...userArticles];
+        
+        // Add mock articles that don't exist in user articles
+        mockArticles.forEach(mockArticle => {
+          if (!combinedArticles.some(article => article.id === mockArticle.id)) {
+            combinedArticles.push(mockArticle);
+          }
+        });
+
+        supabaseArticles = combinedArticles;
+      }
+
+      let filteredArticles = supabaseArticles;
 
       // Apply tag filter if present
       if (tagFilter) {
@@ -58,25 +74,30 @@ const AllArticles = () => {
       }
 
       // Ensure all properties are present for ArticleDetailData
-      const processedArticles: ArticleDetailData[] = filteredArticles.map(article => ({
-        id: article.id,
-        title: article.title,
-        content: article.content || "",
-        excerpt: article.excerpt || "",
-        coverImage: article.coverImage || "/placeholder.svg",
-        author: {
-          id: article.author.id,
-          name: article.author.name || "Anonymous",
-          avatar: article.author.avatar || "/placeholder.svg",
-          bio: article.author.bio || "No bio available"
-        },
-        publishedAt: article.publishedAt || article.created_at || new Date().toISOString(),
-        readTime: article.readTime || "5 min read",
-        tags: article.tags || [],
-        likes: article.likes || 0,
-        comments: article.comments || 0,
-        featured: article.featured || false
-      }));
+      const processedArticles: ArticleDetailData[] = filteredArticles.map(article => {
+        // Handle Supabase data structure which has profiles nested
+        const authorData = article.profiles || article.author || {};
+        
+        return {
+          id: article.id,
+          title: article.title,
+          content: article.content || "",
+          excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
+          coverImage: article.cover_image || article.coverImage || "/placeholder.svg",
+          author: {
+            id: authorData.id || article.author_id || "anonymous",
+            name: authorData.full_name || authorData.name || authorData.username || "Anonymous",
+            avatar: authorData.avatar_url || authorData.avatar || "/placeholder.svg",
+            bio: authorData.bio || "No bio available"
+          },
+          publishedAt: article.published_at || article.publishedAt || new Date().toISOString(),
+          readTime: article.read_time || article.readTime || "5 min read",
+          tags: article.tags || [],
+          likes: article.likes || 0,
+          comments: article.comments || 0,
+          featured: article.featured || false
+        };
+      });
 
       setArticles(processedArticles);
 

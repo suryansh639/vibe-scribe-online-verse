@@ -11,6 +11,7 @@ import MainContent from "@/components/homepage/MainContent";
 import Sidebar from "@/components/homepage/Sidebar";
 import FeaturedArticleSection from "@/components/homepage/FeaturedArticleSection";
 import { ArticleDetailData } from "@/hooks/types/articleTypes";
+import { supabase } from "@/integrations/supabase/client";
 
 const HomePage = () => {
   const { toast } = useToast();
@@ -18,53 +19,82 @@ const HomePage = () => {
   const [articles, setArticles] = useState<ArticleDetailData[]>([]);
   
   useEffect(() => {
-    // Combine mock articles with user-created articles from localStorage
-    const fetchArticles = () => {
-      // Get user articles from localStorage
-      const userArticles = JSON.parse(localStorage.getItem('userArticles') || '[]');
-      
-      // Combine with mock articles, ensuring no duplicates by id
-      const combinedArticles = [...userArticles];
-      
-      // Add mock articles that don't exist in user articles
-      mockArticles.forEach(mockArticle => {
-        if (!combinedArticles.some(article => article.id === mockArticle.id)) {
-          combinedArticles.push(mockArticle);
+    const fetchArticles = async () => {
+      try {
+        // Try to fetch from Supabase first
+        let { data: supabaseArticles, error } = await supabase
+          .from('articles')
+          .select(`
+            id, title, content, excerpt, cover_image, published_at, read_time, tags, likes, comments, featured,
+            author_id, profiles(id, full_name, username, avatar_url, bio)
+          `)
+          .order('published_at', { ascending: false });
+
+        // If there's an error or no data, fall back to localStorage and mockData
+        if (error || !supabaseArticles || supabaseArticles.length === 0) {
+          console.log("Falling back to localStorage and mockData", error);
+          
+          // Get user articles from localStorage
+          const userArticles = JSON.parse(localStorage.getItem('userArticles') || '[]');
+          
+          // Combine with mock articles, ensuring no duplicates by id
+          const combinedArticles = [...userArticles];
+          
+          // Add mock articles that don't exist in user articles
+          mockArticles.forEach(mockArticle => {
+            if (!combinedArticles.some(article => article.id === mockArticle.id)) {
+              combinedArticles.push(mockArticle);
+            }
+          });
+          
+          supabaseArticles = combinedArticles;
         }
-      });
-      
-      // Ensure all articles conform to ArticleDetailData interface
-      const processedArticles: ArticleDetailData[] = combinedArticles.map(article => ({
-        id: article.id,
-        title: article.title,
-        content: article.content || "",
-        excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
-        coverImage: article.coverImage || "/placeholder.svg",
-        publishedAt: article.publishedAt || new Date().toISOString(),
-        readTime: article.readTime || "5 min read",
-        tags: article.tags || [],
-        likes: article.likes || 0,
-        comments: article.comments || 0,
-        featured: article.featured || false,
-        author: article.author || {
-          id: "mock-author",
-          name: "Mock Author",
-          avatar: "/placeholder.svg",
-          bio: "This is a mock author bio for demonstration purposes."
-        }
-      }));
-      
-      setArticles(processedArticles);
-      setLoading(false);
+        
+        // Ensure all articles conform to ArticleDetailData interface
+        const processedArticles: ArticleDetailData[] = supabaseArticles.map(article => {
+          // Handle Supabase data structure which has profiles nested
+          const authorData = article.profiles || article.author || {};
+          
+          return {
+            id: article.id,
+            title: article.title,
+            content: article.content || "",
+            excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
+            coverImage: article.cover_image || article.coverImage || "/placeholder.svg",
+            publishedAt: article.published_at || article.publishedAt || new Date().toISOString(),
+            readTime: article.read_time || article.readTime || "5 min read",
+            tags: article.tags || [],
+            likes: article.likes || 0,
+            comments: article.comments || 0,
+            featured: article.featured || false,
+            author: {
+              id: authorData.id || article.author_id || "mock-author",
+              name: authorData.full_name || authorData.name || authorData.username || "Anonymous",
+              avatar: authorData.avatar_url || authorData.avatar || "/placeholder.svg",
+              bio: authorData.bio || "No bio available"
+            }
+          };
+        });
+        
+        setArticles(processedArticles);
+      } catch (err) {
+        console.error("Error fetching articles:", err);
+        toast({
+          title: "Error",
+          description: "Failed to load articles. Using mock data instead.",
+          variant: "destructive",
+        });
+        
+        // Fallback to mock data
+        setArticles(mockArticles);
+      } finally {
+        setLoading(false);
+      }
     };
     
-    // Simulate loading time
-    const timer = setTimeout(() => {
-      fetchArticles();
-    }, 800);
-    
-    return () => clearTimeout(timer);
-  }, []);
+    // Fetch the articles
+    fetchArticles();
+  }, [toast]);
   
   // Get the featured article - either look for one explicitly marked as featured or use the first one
   const featuredArticle = articles.find(article => article.featured) || articles[0];
