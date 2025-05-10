@@ -53,7 +53,8 @@ const HomePage = () => {
         // Ensure all articles conform to ArticleDetailData interface
         const processedArticles: ArticleDetailData[] = supabaseArticles.map(article => {
           // Handle Supabase data structure which has profiles nested
-          const authorData = article.profiles || {};
+          // Use type assertion to handle potential null/undefined values
+          const profiles = article.profiles as Record<string, any> | null | undefined;
           
           return {
             id: article.id,
@@ -68,10 +69,10 @@ const HomePage = () => {
             comments: article.comments || 0,
             featured: article.featured || false,
             author: {
-              id: authorData.id || article.author_id || "mock-author",
-              name: authorData.full_name || authorData.username || "Anonymous",
-              avatar: authorData.avatar_url || "/placeholder.svg",
-              bio: authorData.bio || "No bio available"
+              id: profiles?.id || article.author_id || "mock-author",
+              name: profiles?.full_name || profiles?.username || "Anonymous",
+              avatar: profiles?.avatar_url || "/placeholder.svg",
+              bio: profiles?.bio || "No bio available"
             }
           };
         });

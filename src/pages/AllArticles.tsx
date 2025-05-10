@@ -76,7 +76,8 @@ const AllArticles = () => {
       // Ensure all properties are present for ArticleDetailData
       const processedArticles: ArticleDetailData[] = filteredArticles.map(article => {
         // Handle Supabase data structure which has profiles nested
-        const authorData = article.profiles || {};
+        // Use type assertion to handle potential null/undefined values
+        const profiles = article.profiles as Record<string, any> | null | undefined;
         
         return {
           id: article.id,
@@ -91,10 +92,10 @@ const AllArticles = () => {
           comments: article.comments || 0,
           featured: article.featured || false,
           author: {
-            id: authorData.id || article.author_id || "anonymous",
-            name: authorData.full_name || authorData.username || "Anonymous",
-            avatar: authorData.avatar_url || "/placeholder.svg",
-            bio: authorData.bio || "No bio available"
+            id: profiles?.id || article.author_id || "anonymous",
+            name: profiles?.full_name || profiles?.username || "Anonymous",
+            avatar: profiles?.avatar_url || "/placeholder.svg",
+            bio: profiles?.bio || "No bio available"
           }
         };
       });
