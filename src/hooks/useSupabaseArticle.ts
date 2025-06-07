@@ -13,9 +13,6 @@ export const useSupabaseArticle = (id: string) => {
   useEffect(() => {
     const fetchArticleFromSupabase = async () => {
       try {
-        setLoading(true);
-        console.log("Fetching article with ID:", id);
-        
         // Fetch article from Supabase
         const { data, error } = await supabase
           .from("articles")
@@ -30,17 +27,13 @@ export const useSupabaseArticle = (id: string) => {
         if (error) {
           console.log("Supabase error:", error);
           setError(error.message);
-          setLoading(false);
           return null;
         }
         
         if (!data) {
           setError("Article not found in database");
-          setLoading(false);
           return null;
         }
-        
-        console.log("Article data from Supabase:", data);
         
         // Transform article data
         const articleData: ArticleDetailData = {
@@ -56,10 +49,10 @@ export const useSupabaseArticle = (id: string) => {
           comments: data.comments || 0,
           featured: data.featured || false,
           author: {
-            id: data.author?.id || "unknown",
-            name: data.author?.full_name || data.author?.username || "Anonymous",
-            avatar: data.author?.avatar_url || "/placeholder.svg",
-            bio: data.author?.bio || ""
+            id: data.author.id,
+            name: data.author.full_name || data.author.username || "Anonymous",
+            avatar: data.author.avatar_url || "/placeholder.svg",
+            bio: data.author.bio || ""
           }
         };
         
@@ -73,12 +66,10 @@ export const useSupabaseArticle = (id: string) => {
         // Fetch popular tags
         await fetchPopularTags();
         
-        setLoading(false);
         return articleData;
       } catch (error) {
         console.error("Error in fetchArticleFromSupabase:", error);
         setError("An error occurred while fetching the article from database");
-        setLoading(false);
         return null;
       }
     };
@@ -153,10 +144,7 @@ export const useSupabaseArticle = (id: string) => {
       }
     };
 
-    if (id) {
-      fetchArticleFromSupabase();
-    }
-    
+    fetchArticleFromSupabase();
     return () => {
       // Cleanup if needed
     };

@@ -14,7 +14,7 @@ import PopularTopics from "@/components/articles/PopularTopics";
 import ArticleDetailSkeleton from "@/components/articles/ArticleDetailSkeleton";
 import ArticleNotFound from "@/components/articles/ArticleNotFound";
 import NewsletterSignup from "@/components/articles/NewsletterSignup";
-import { useSupabaseArticle } from "@/hooks/useSupabaseArticle";
+import { useArticleDetail } from "@/hooks/useArticleDetail";
 import { slugify } from "@/lib/utils";
 
 const ArticleDetail = () => {
@@ -22,8 +22,8 @@ const ArticleDetail = () => {
   const navigate = useNavigate();
   const [commentsRefreshTrigger, setCommentsRefreshTrigger] = useState(0);
   
-  // Use the hook to fetch article data from Supabase
-  const { article, relatedArticles, popularTags, loading, error } = useSupabaseArticle(id || "");
+  // Use the hook to fetch article data
+  const { article, relatedArticles, popularTags, loading, error } = useArticleDetail(id);
   
   useEffect(() => {
     // Log for debugging
