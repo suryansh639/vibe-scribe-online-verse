@@ -40,15 +40,6 @@ export const users = [
     following: 89,
     followers: 432
   }
-  {
-    id: "user5",
-    name: "Suryansh Gupta",
-    email: "suryansh@gmail.com",
-    bio: "Technology blogger and photographer. Documenting my adventures and sharing travel tips.",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=150&h=150",
-    following: 89,
-    followers: 432
-  }
 ];
 
 // Mock Articles
@@ -322,55 +313,6 @@ By thoughtfully building your personal brand, you create a valuable professional
     featured: false
   },
   {
-  "id": "article6",
-  "title": "The Ethical and Privacy Dilemma in the Age of AI",
-  "excerpt": "As AI technologies advance, concerns about data privacy and ethical use intensify. Explore the challenges and implications of data collection practices in today's digital landscape.",
-  "content": `
-# The Ethical and Privacy Dilemma in the Age of AI
-
-As artificial intelligence (AI) technologies become increasingly integrated into our daily lives, they bring not only innovation but also significant ethical and privacy concerns. The rapid advancement of AI has outpaced the development of regulations and safeguards, leading to potential risks for individuals and society.
-
-## OpenAI's Data Collection Practices
-
-OpenAI, the organization behind ChatGPT, has been at the forefront of AI development. However, its data collection practices have raised eyebrows. According to OpenAI's privacy policy, user interactions may be used to improve AI models. While OpenAI states that it does not actively seek out personal information, the data collected can still include sensitive details shared by users during conversations. Users have the option to opt out of data sharing through their settings, but the default remains opt-in, which may not be apparent to all users. :contentReference[oaicite:0]{index=0}
-
-## The Clearview AI Controversy
-
-Clearview AI, a facial recognition company, faced significant backlash for scraping billions of images from social media and other websites without user consent. The Dutch Data Protection Authority fined Clearview AI €30.5 million ($33.7 million) for violating privacy laws by building an illegal database of facial images. This case highlights the potential for misuse of publicly available data and the importance of consent in data collection. :contentReference[oaicite:1]{index=1}
-
-## Data Breaches and Their Implications
-
-Data breaches continue to pose significant threats to personal privacy. In Australia, a data breach involving ClubsNSW exposed the personal details of over a million individuals. The breach was linked to the tech company Outabox, which allegedly shared information with an overseas developer. Such incidents underscore the vulnerabilities in data storage and the potential consequences of inadequate security measures. :contentReference[oaicite:2]{index=2}
-
-## Health Data and AI: A Double-Edged Sword
-
-Tech giants like Apple are integrating AI into health applications, offering features like heart rate monitoring and predictive analytics. While these innovations can enhance personal wellness, they also raise concerns about the extent of data collection and potential misuse. Apple's Health app allows users to share data with third-party apps, emphasizing the need for users to be vigilant about whom they grant access to their health information. :contentReference[oaicite:3]{index=3}
-
-## The 23andMe Data Dilemma
-
-Genetic testing company 23andMe has faced scrutiny over its handling of user data. Following a significant data breach and subsequent bankruptcy filing, concerns have arisen about the potential sale of its vast genetic database. Experts warn that such sensitive information could be misused if acquired by entities lacking stringent data protection measures. :contentReference[oaicite:4]{index=4}
-
-## Navigating the Ethical Landscape
-
-The intersection of AI advancement and data privacy presents a complex ethical landscape. As AI systems become more sophisticated, the potential for data misuse grows. It is imperative for organizations to prioritize transparency, obtain informed consent, and implement robust security measures. Simultaneously, users must remain informed and cautious about the data they share and the platforms they engage with.
-
-In conclusion, while AI offers transformative potential, it is accompanied by significant ethical and privacy challenges. Addressing these concerns requires a collaborative effort between developers, regulators, and users to ensure that technological progress does not come at the expense of individual rights and freedoms.
-  `,
-  "coverImage": "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=800&h=500",
-  "author": {
-    "id": "user5",
-    "name": "Suryansh Gupta",
-    "avatar": "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150&h=150"
-  },
-  "publishedAt": "2025-05-11T09:11:14+05:30",
-  "readTime": "7 min read",
-  "tags": ["AI Ethics", "Data Privacy", "Technology"],
-  "likes": 0,
-  "comments": 0,
-  "featured": false
-},
-
-  {
     id: "article4",
     title: "The Complete Guide to Remote Work: Staying Productive and Connected",
     excerpt: "Remote work offers flexibility but comes with challenges. Discover practical strategies to maintain productivity and well-being while working from anywhere.",
@@ -522,8 +464,7 @@ By implementing these strategies, you can cultivate a remote work experience tha
     likes: 189,
     comments: 27,
     featured: false
-  },
-  
+  }
 ];
 
 // Mock Tags
