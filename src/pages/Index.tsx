@@ -64,7 +64,8 @@ const HomePage = () => {
           if (!combined.some(article => article.id === mockArticle.id)) {
             combined.push({
               ...mockArticle,
-              excerpt: mockArticle.excerpt || mockArticle.content?.substring(0, 150) + "..." || "",
+              content: mockArticle.content || "", // Ensure content is always present
+              excerpt: mockArticle.excerpt || (mockArticle.content ? mockArticle.content.substring(0, 150) + "..." : ""),
               coverImage: mockArticle.coverImage || "/placeholder.svg",
               publishedAt: mockArticle.publishedAt || new Date().toISOString(),
               readTime: mockArticle.readTime || "5 min read",
@@ -78,7 +79,7 @@ const HomePage = () => {
                 avatar: "/placeholder.svg",
                 bio: "This is a mock author bio for demonstration purposes."
               }
-            })
+            });
           }
         });
 
