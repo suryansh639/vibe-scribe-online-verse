@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +16,44 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [likesCount, setLikesCount] = useState(0);
   const [loading, setLoading] = useState<InteractionType | null>(null);
+
+  // Utility to refresh like count and bookmark/like status from Supabase
+  const refreshState = async () => {
+    if (!articleId) return;
+
+    // Fetch current like count from the article row
+    const { data: articleData, error: articleError } = await supabase
+      .from("articles")
+      .select("likes")
+      .eq("id", articleId)
+      .maybeSingle();
+
+    if (!articleError && articleData) {
+      setLikesCount(articleData.likes ?? 0);
+    }
+
+    if (user) {
+      // Check if user has liked/bookmarked
+      const { data: likeData } = await supabase
+        .from("article_likes")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("article_id", articleId)
+        .maybeSingle();
+      setIsLiked(!!likeData);
+
+      const { data: bookmarkData } = await supabase
+        .from("bookmarks")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("article_id", articleId)
+        .maybeSingle();
+      setIsBookmarked(!!bookmarkData);
+    } else {
+      setIsLiked(false);
+      setIsBookmarked(false);
+    }
+  };
 
   // Fetch initial interaction state
   useEffect(() => {
@@ -89,42 +126,31 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
       });
       return;
     }
-
     setLoading("bookmark");
-
     try {
       if (isBookmarked) {
-        // Remove bookmark
-        const { error } = await supabase
+        await supabase
           .from("bookmarks")
           .delete()
           .eq("user_id", user.id)
           .eq("article_id", articleId);
-
-        if (error) throw error;
-        setIsBookmarked(false);
-        
         toast({
           title: "Bookmark removed",
           description: "Article has been removed from your bookmarks",
         });
       } else {
-        // Add bookmark
-        const { error } = await supabase
+        await supabase
           .from("bookmarks")
           .insert({
             user_id: user.id,
             article_id: articleId,
           });
-
-        if (error) throw error;
-        setIsBookmarked(true);
-        
         toast({
           title: "Article bookmarked",
           description: "Article has been added to your bookmarks",
         });
       }
+      await refreshState(); // always re-fetch state
     } catch (error: any) {
       console.error("Error toggling bookmark:", error);
       toast({
@@ -146,58 +172,31 @@ export const useArticleInteractions = ({ articleId }: UseArticleInteractionsProp
       });
       return;
     }
-
     setLoading("like");
-
     try {
       if (isLiked) {
-        // Remove like
-        const { error } = await supabase
+        await supabase
           .from("article_likes")
           .delete()
           .eq("user_id", user.id)
           .eq("article_id", articleId);
-
-        if (error) throw error;
-        
-        // Update article likes count in the articles table
-        await supabase
-          .from("articles")
-          .update({ likes: likesCount - 1 })
-          .eq("id", articleId);
-        
-        setIsLiked(false);
-        setLikesCount(prev => Math.max(0, prev - 1));
-        
         toast({
           title: "Like removed",
           description: "Your like has been removed from the article",
         });
       } else {
-        // Add like
-        const { error } = await supabase
+        await supabase
           .from("article_likes")
           .insert({
             user_id: user.id,
             article_id: articleId,
           });
-
-        if (error) throw error;
-        
-        // Update article likes count in the articles table
-        await supabase
-          .from("articles")
-          .update({ likes: likesCount + 1 })
-          .eq("id", articleId);
-        
-        setIsLiked(true);
-        setLikesCount(prev => prev + 1);
-        
         toast({
           title: "Article liked",
           description: "You have liked this article",
         });
       }
+      await refreshState(); // always re-fetch state!
     } catch (error: any) {
       console.error("Error toggling like:", error);
       toast({

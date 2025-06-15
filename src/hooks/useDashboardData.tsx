@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -74,22 +73,18 @@ export const useDashboardData = () => {
   // Fetch bookmarked articles
   const fetchBookmarkedArticles = useCallback(async () => {
     if (!user) return [];
-    
-    // First get all bookmark IDs
     const { data: bookmarks, error: bookmarksError } = await supabase
       .from('bookmarks')
       .select('article_id')
       .eq('user_id', user.id);
-    
+
     if (bookmarksError || !bookmarks || bookmarks.length === 0) {
       console.error("Error fetching bookmarks or no bookmarks found:", bookmarksError);
       return [];
     }
-    
-    // Get the article IDs from bookmarks
     const articleIds = bookmarks.map(bookmark => bookmark.article_id);
-    
-    // Fetch the full article data using those IDs
+
+    // Make sure to re-query all articles by their id:
     const { data: articles, error: articlesError } = await supabase
       .from('articles')
       .select(`
@@ -98,12 +93,11 @@ export const useDashboardData = () => {
         profiles!articles_author_id_fkey(id, full_name, username, avatar_url)
       `)
       .in('id', articleIds);
-    
+
     if (articlesError || !articles) {
       console.error("Error fetching bookmarked articles:", articlesError);
       return [];
     }
-    
     return articles.map(article => ({
       id: article.id,
       title: article.title,
@@ -125,22 +119,16 @@ export const useDashboardData = () => {
   // Fetch liked articles
   const fetchLikedArticles = useCallback(async () => {
     if (!user) return [];
-    
-    // First get all article IDs the user has liked
     const { data: likes, error: likesError } = await supabase
       .from('article_likes')
       .select('article_id')
       .eq('user_id', user.id);
-    
+
     if (likesError || !likes || likes.length === 0) {
       console.error("Error fetching likes or no likes found:", likesError);
       return [];
     }
-    
-    // Get the article IDs from likes
     const articleIds = likes.map(like => like.article_id);
-    
-    // Fetch the full article data using those IDs
     const { data: articles, error: articlesError } = await supabase
       .from('articles')
       .select(`
@@ -149,12 +137,11 @@ export const useDashboardData = () => {
         profiles!articles_author_id_fkey(id, full_name, username, avatar_url)
       `)
       .in('id', articleIds);
-    
+
     if (articlesError || !articles) {
       console.error("Error fetching liked articles:", articlesError);
       return [];
     }
-    
     return articles.map(article => ({
       id: article.id,
       title: article.title,
