@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -20,63 +19,60 @@ const AllArticles = () => {
   const tagFilter = searchParams.get("tag");
   const searchFilter = searchParams.get("search");
 
-  // Memoize fetchArticles to prevent unnecessary re-renders
   const fetchArticles = useCallback(async () => {
     setLoading(true);
 
     try {
-      // Get user articles from localStorage
-      const userArticles = JSON.parse(localStorage.getItem('userArticles') || '[]');
-      
-      // Combine with mock articles, ensuring no duplicates by id
-      const combinedArticles = [...userArticles];
-      
-      // Add mock articles that don't exist in user articles
-      mockArticles.forEach(mockArticle => {
-        if (!combinedArticles.some(article => article.id === mockArticle.id)) {
-          combinedArticles.push(mockArticle);
-        }
-      });
+      // Fetch all published articles from Supabase
+      const { data: supaArticles, error } = await supabase
+        .from('articles')
+        .select(`
+          id, title, excerpt, content, cover_image, published_at, created_at,
+          read_time, tags, likes, comments, featured,
+          author:profiles(id, full_name, username, avatar_url, bio)
+        `)
+        .eq('published', true)
+        .order('published_at', { ascending: false });
 
-      let filteredArticles = combinedArticles;
+      if (error) throw error;
 
-      // Apply tag filter if present
-      if (tagFilter) {
-        filteredArticles = filteredArticles.filter(article => 
-          article.tags && article.tags.includes(tagFilter)
-        );
-      }
-
-      // Apply search filter if present
-      if (searchFilter) {
-        const searchLower = searchFilter.toLowerCase();
-        filteredArticles = filteredArticles.filter(article => 
-          article.title.toLowerCase().includes(searchLower) ||
-          article.excerpt?.toLowerCase().includes(searchLower) ||
-          article.tags?.some(tag => tag.toLowerCase().includes(searchLower))
-        );
-      }
-
-      // Ensure all properties are present for ArticleDetailData
-      const processedArticles: ArticleDetailData[] = filteredArticles.map(article => ({
+      // Prepare Supabase articles
+      let processedArticles: ArticleDetailData[] = (supaArticles || []).map(article => ({
         id: article.id,
         title: article.title,
         content: article.content || "",
-        excerpt: article.excerpt || "",
-        coverImage: article.coverImage || "/placeholder.svg",
+        excerpt: article.excerpt || article.content?.substring(0, 150) + "..." || "",
+        coverImage: article.cover_image || "/placeholder.svg",
         author: {
           id: article.author.id,
-          name: article.author.name || "Anonymous",
-          avatar: article.author.avatar || "/placeholder.svg",
+          name: article.author.full_name || article.author.username || "Anonymous",
+          avatar: article.author.avatar_url || "/placeholder.svg",
           bio: article.author.bio || "No bio available"
         },
-        publishedAt: article.publishedAt || article.created_at || new Date().toISOString(),
-        readTime: article.readTime || "5 min read",
+        publishedAt: article.published_at || article.created_at || new Date().toISOString(),
+        readTime: article.read_time || "5 min read",
         tags: article.tags || [],
         likes: article.likes || 0,
         comments: article.comments || 0,
         featured: article.featured || false
       }));
+
+      // (Optional) Merge with mock/local articles here if you want to show them as drafts
+
+      // Apply tag filter if present
+      if (tagFilter) {
+        processedArticles = processedArticles.filter(article => article.tags && article.tags.includes(tagFilter));
+      }
+
+      // Apply search filter if present
+      if (searchFilter) {
+        const searchLower = searchFilter.toLowerCase();
+        processedArticles = processedArticles.filter(article => 
+          article.title.toLowerCase().includes(searchLower) ||
+          article.excerpt?.toLowerCase().includes(searchLower) ||
+          article.tags?.some(tag => tag.toLowerCase().includes(searchLower))
+        );
+      }
 
       setArticles(processedArticles);
 
@@ -94,7 +90,7 @@ const AllArticles = () => {
         .map(([tag]) => tag);
 
       setPopularTags(sortedTags);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error in fetching articles:", err);
     } finally {
       setLoading(false);
